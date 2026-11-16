@@ -1,0 +1,49 @@
+name: Bug report / Hata bildirimi
+description: Something does not work as expected. / Bir şey beklendiği gibi çalışmıyor.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! / Hata bildirdiğin için teşekkürler!
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Ne oldu?
+      description: Steps to reproduce, what you expected and what you saw. / Adımlar, beklenen ve görülen sonuç.
+      placeholder: |
+        1. Open Ad Research
+        2. Send "..."
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module / Modül
+      options:
+        - Ad Research / Reklam Araştırması
+        - Reels Studio / Reels Stüdyosu
+        - Competitor Analysis / Rakip Analizi
+        - Trend Radar
+        - Settings, onboarding / Ayarlar, ilk açılış
+        - Other / Diğer
+  - type: input
+    id: version
+    attributes:
+      label: mar-ai version / Sürüm
+      description: Settings → Updates & about / Ayarlar → Güncelleme ve hakkında
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and browser / İşletim sistemi ve tarayıcı
+      placeholder: Windows 11 · Microsoft Edge
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Günlükler
+      description: Optional. %APPDATA%\mar-ai\logs\main.log (remove anything private). / İsteğe bağlı; özel bilgileri çıkar.
+      render: text

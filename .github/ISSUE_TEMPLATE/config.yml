@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Build your own MCP / Kendi MCP'ni yaz
+    url: https://github.com/EthYusuf/mar-ai/blob/main/docs/MCP-DEVELOPMENT.md
+    about: Guide for adding a new data source. / Yeni veri kaynağı ekleme rehberi.
+  - name: Security report / Güvenlik bildirimi
+    url: https://github.com/EthYusuf/mar-ai/security/advisories/new
+    about: Report vulnerabilities privately. / Güvenlik açıklarını gizli bildir.

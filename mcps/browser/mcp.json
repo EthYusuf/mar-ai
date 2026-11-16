@@ -1,0 +1,13 @@
+{
+  "id": "browser",
+  "version": "0.1.0",
+  "entry": "dist/server.mjs",
+  "name": { "tr": "Tarayıcı Kontrolü (computer use)", "en": "Browser Control (computer use)" },
+  "description": {
+    "tr": "Yapay zeka bir tarayıcıyı adım adım kullanır: aç, tıkla, yaz, kaydır, ekran görüntüsü al. Varsayılan arka planda; Ayarlar'dan görünür yapılabilir.",
+    "en": "The AI drives a browser step by step: open, click, type, scroll, screenshot. Headless by default; can be made visible in Settings."
+  },
+  "sources": ["Herkese açık web sayfaları"],
+  "usesBrowser": true,
+  "browserModeEnv": "MARAI_BROWSER_HEADLESS"
+}

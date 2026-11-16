@@ -1,0 +1,12 @@
+{
+  "id": "web",
+  "version": "0.1.0",
+  "entry": "dist/server.mjs",
+  "name": { "tr": "Web Araştırma (headless Chrome)", "en": "Web Research (headless Chrome)" },
+  "description": {
+    "tr": "Sayfaları arka planda gerçek tarayıcıda açar: içerik okuma, ekran görüntüsü, pazarlama/SEO denetimi ve reklam pikseli tespiti.",
+    "en": "Opens pages in a real background browser: content reading, screenshots, marketing/SEO audit and ad pixel detection."
+  },
+  "sources": ["Herkese açık web sayfaları"],
+  "usesBrowser": true
+}

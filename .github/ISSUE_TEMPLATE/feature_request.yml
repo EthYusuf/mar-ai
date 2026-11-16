@@ -1,0 +1,22 @@
+name: Feature request / Özellik isteği
+description: Suggest a new feature, data source or panel. / Yeni özellik, veri kaynağı veya panel öner.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do? / Ne yapmak istiyorsun?
+      description: The marketing task or problem behind the idea. / Fikrin arkasındaki pazarlama işi veya sorun.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution / Önerilen çözüm
+      description: How should mar-ai help? Which panels or data would be ideal? / mar-ai nasıl yardım etmeli? Hangi paneller veya veriler ideal olur?
+  - type: input
+    id: source
+    attributes:
+      label: Data source (if any) / Veri kaynağı (varsa)
+      description: Must be public, free and no-login. / Herkese açık, ücretsiz ve girişsiz olmalı.
+      placeholder: https://...

@@ -1,0 +1,28 @@
+# Yeni sürüm: package.json'daki sürümü artır, "git tag v0.2.0 && git push --tags".
+# Bu iş akışı Windows kurulum dosyasını derler ve GitHub Releases'e yükler;
+# kurulu uygulamalar yeni sürümü otomatik indirir.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Kurulum dosyasını derle ve yayınla
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

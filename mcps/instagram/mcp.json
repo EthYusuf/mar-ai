@@ -1,0 +1,12 @@
+{
+  "id": "instagram",
+  "version": "0.1.0",
+  "entry": "dist/server.mjs",
+  "name": { "tr": "Instagram (herkese açık)", "en": "Instagram (public)" },
+  "description": {
+    "tr": "Herkese açık hesap ve gönderileri ziyaretçi olarak okur: takipçi, beğeni, yorum, etkileşim oranı, Reels oranı, hashtagler. Giriş yapmaz.",
+    "en": "Reads public accounts and posts as a logged-out visitor: followers, likes, comments, engagement rate, Reels share, hashtags. Never logs in."
+  },
+  "sources": ["Instagram herkese açık sayfalar"],
+  "usesBrowser": true
+}

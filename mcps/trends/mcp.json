@@ -1,0 +1,12 @@
+{
+  "id": "trends",
+  "version": "0.1.0",
+  "entry": "dist/server.mjs",
+  "name": { "tr": "Trendler ve Haberler", "en": "Trends & News" },
+  "description": {
+    "tr": "Google Trends'te yükselen aramalar, Google News haber taraması ve Wikipedia ilgi grafiği.",
+    "en": "Rising Google Trends searches, Google News monitoring and Wikipedia interest over time."
+  },
+  "sources": ["Google Trends RSS", "Google News RSS", "Wikimedia Pageviews API"],
+  "usesBrowser": false
+}

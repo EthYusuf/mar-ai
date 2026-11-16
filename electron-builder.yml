@@ -1,0 +1,57 @@
+# mar-ai — Windows kurulum paketi (NSIS) ve GitHub Releases üzerinden otomatik güncelleme
+appId: com.marai.app
+productName: mar-ai
+copyright: Copyright © 2026 mar-ai contributors
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**
+  - package.json
+  - "!**/*.map"
+
+# Claude Code motoru çalıştırılabilir dosyadır; asar arşivinin dışında kalmalı
+asarUnpack:
+  - node_modules/@anthropic-ai/claude-agent-sdk-*/**
+
+extraResources:
+  # Derlenmiş MCP sunucuları: resources/mcps/<id>/{mcp.json, dist/server.mjs}
+  - from: mcps
+    to: mcps
+    filter:
+      - "*/mcp.json"
+      - "*/dist/**"
+      - "!_shared/**"
+  # Skill'ler (Claude Code eklentisi biçiminde)
+  - from: plugin
+    to: plugin
+
+electronLanguages:
+  - tr
+  - en-US
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: mar-ai
+  artifactName: mar-ai-Setup-${version}.${ext}
+  uninstallDisplayName: mar-ai
+
+# Yayın hedefi: kurulu uygulamalar güncellemeleri bu deponun Releases sayfasından alır.
+# Depo herkese açık olmalıdır (gizli depodan otomatik güncelleme yapılamaz).
+publish:
+  provider: github
+  owner: EthYusuf
+  repo: mar-ai
+  releaseType: release

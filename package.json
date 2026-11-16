@@ -1,0 +1,57 @@
+{
+  "name": "mar-ai",
+  "productName": "mar-ai",
+  "version": "0.1.0",
+  "description": "mar-ai — pazarlama ekipleri için açık kaynak, görsel çalışan yapay zeka asistanı (reklam araştırması, Reels planlama, rakip analizi).",
+  "license": "MIT",
+  "author": "mar-ai contributors",
+  "homepage": "https://github.com/EthYusuf/mar-ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EthYusuf/mar-ai.git"
+  },
+  "main": "dist/main/main.mjs",
+  "type": "module",
+  "scripts": {
+    "build:mcps": "node scripts/build-mcps.mjs",
+    "build:main": "node scripts/build-main.mjs",
+    "build:renderer": "vite build",
+    "build": "npm run build:mcps && npm run build:main && npm run build:renderer",
+    "start": "npm run build && node scripts/start.mjs",
+    "dev": "node scripts/dev.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:mcps": "node scripts/test-mcps.mjs",
+    "dist": "npm run build && electron-builder --win --publish never",
+    "release": "npm run build && electron-builder --win --publish always"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.325",
+    "@anthropic-ai/sdk": "1.9.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "electron-updater": "6.8.11",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "cheerio": "1.2.0",
+    "electron": "45.3.3",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
+    "puppeteer-core": "25.17.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller": false
+  }
+}

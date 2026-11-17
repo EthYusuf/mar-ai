@@ -1,12 +1,17 @@
 {
   "id": "adlibrary",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "entry": "dist/server.mjs",
-  "name": { "tr": "Reklam Kütüphanesi (Meta)", "en": "Ad Library (Meta)" },
+  "name": {
+    "tr": "Reklam Kütüphanesi (Meta)",
+    "en": "Ad Library (Meta)"
+  },
   "description": {
     "tr": "Meta Reklam Kütüphanesi'nden Instagram ve Facebook reklamlarını arar: reklam metni, CTA, format, yayın süresi, kreatif görselleri.",
     "en": "Searches Instagram and Facebook ads in the Meta Ad Library: copy, CTA, format, run time and creatives."
   },
-  "sources": ["Meta Ad Library (herkese açık sayfa)"],
+  "sources": [
+    "Meta Ad Library (herkese açık sayfa)"
+  ],
   "usesBrowser": true
 }

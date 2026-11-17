@@ -7,8 +7,12 @@
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { fetchText, fetchJson, ok, fail, safe, startServer, TtlCache, median, round, MARAI_VERSION } from '../../_shared/common';
+import { fetchText, fetchJson, ok, fail, safe, startServer, TtlCache, median, round, uiLang, MARAI_VERSION } from '../../_shared/common';
 import { blocks, tag, attr } from '../../_shared/xml';
+import { addDaysIso, quantile, rollingMedian } from '../../_shared/analytics';
+import { chartHint, saveChart } from '../../_shared/charts';
+
+const tt = (tr: string, en: string) => (uiLang() === 'tr' ? tr : en);
 
 const server = new McpServer({ name: 'mar-youtube', version: MARAI_VERSION });
 const channelCache = new TtlCache<ChannelReport>(15 * 60_000);
@@ -41,7 +45,13 @@ interface ChannelReport {
     avg_views_shorts: number | null;
     avg_views_long: number | null;
     best_weekday: string | null;
+    /** Beğeni / izlenme (RSS'teki beğeni sayısıyla), medyan */
+    median_like_rate_pct: number | null;
+    /** Son 5 videonun medyan izlenmesi, önceki videoların medyanına göre */
+    momentum_recent5_vs_previous_pct: number | null;
   };
+  /** Bir sonraki video için beklenen izlenme (son 10 videonun dağılımı; kaba tahmin) */
+  next_upload_expectation: { expected_date: string; median_views: number; low_p25: number; high_p75: number; basis: string } | null;
   top_videos: VideoItem[];
   videos: VideoItem[];
 }
@@ -116,6 +126,20 @@ async function analyzeChannel(input: string): Promise<ChannelReport> {
       bestDay = WEEKDAYS_TR[d];
     }
   }
+  const likeRates = withViews.filter((v) => v.ratings !== null && v.views > 0).map((v) => ((v.ratings ?? 0) / v.views) * 100);
+  const newest = [...withViews].sort((a, b) => (a.published < b.published ? 1 : -1));
+  const recent = newest.slice(0, 5).map((v) => v.views);
+  const older = newest.slice(5).map((v) => v.views);
+  const last10 = newest
+    .slice(0, 10)
+    .map((v) => v.views)
+    .sort((a, b) => a - b);
+  const sortedDates = videos
+    .map((v) => v.published.slice(0, 10))
+    .filter(Boolean)
+    .sort();
+  const gaps = sortedDates.slice(1).map((d, i) => (Date.parse(d) - Date.parse(sortedDates[i])) / 86400_000);
+  const typicalGap = gaps.length ? Math.max(1, Math.round(median(gaps))) : 7;
   const report: ChannelReport = {
     channel_id: id,
     name,
@@ -132,7 +156,19 @@ async function analyzeChannel(input: string): Promise<ChannelReport> {
       avg_views_shorts: shorts.length ? avg(shorts.map((v) => v.views)) : null,
       avg_views_long: longs.length ? avg(longs.map((v) => v.views)) : null,
       best_weekday: bestDay,
+      median_like_rate_pct: likeRates.length ? round(median(likeRates), 2) : null,
+      momentum_recent5_vs_previous_pct: recent.length >= 3 && older.length >= 3 && median(older) > 0 ? round((median(recent) / median(older) - 1) * 100, 1) : null,
     },
+    next_upload_expectation:
+      last10.length >= 5 && sortedDates.length
+        ? {
+            expected_date: addDaysIso(sortedDates[sortedDates.length - 1], typicalGap),
+            median_views: Math.round(quantile(last10, 0.5)),
+            low_p25: Math.round(quantile(last10, 0.25)),
+            high_p75: Math.round(quantile(last10, 0.75)),
+            basis: 'Son 10 videonun izlenme dağılımı (videolar farklı yaşta olduğundan kaba bir beklentidir).',
+          }
+        : null,
     top_videos: [...withViews].sort((a, b) => b.views - a.views).slice(0, 3),
     videos,
   };
@@ -146,7 +182,7 @@ server.registerTool(
   {
     title: 'YouTube kanal analizi',
     description:
-      'Bir YouTube kanalının son 15 videosunu (resmi RSS) analiz eder: ortalama/medyan izlenme, haftalık yükleme sıklığı, Shorts oranı, Shorts ve uzun video performansı, en iyi gün ve en çok izlenen videolar. Kanal adresi, @kullanıcıadı veya UC... kimliği kabul eder.',
+      'Bir YouTube kanalının son 15 videosunu (resmi RSS) analiz eder: ortalama/medyan izlenme, haftalık yükleme sıklığı, Shorts oranı, Shorts ve uzun video performansı, en iyi gün, en çok izlenen videolar, beğeni oranı, son 5 videonun ivmesi ve bir sonraki video için beklenen izlenme aralığı. Hazır çizgi grafik (chart_ref) döner: video başına izlenme + 5 videoluk medyan + sonraki video beklentisi. Kanal adresi, @kullanıcıadı veya UC... kimliği kabul eder.',
     inputSchema: {
       channel: z.string().min(2).describe('Örn. "@MrBeast", "https://www.youtube.com/@nike" veya "UCX6OQ3DkcsbYNE6H8uQQuVA"'),
       include_all_videos: z.boolean().default(true).describe('Tüm video listesini de döndür'),
@@ -155,9 +191,61 @@ server.registerTool(
   },
   safe(async ({ channel, include_all_videos }) => {
     const report = await analyzeChannel(channel);
-    return ok({ source: 'YouTube RSS + herkese açık kanal sayfası', ...report, videos: include_all_videos ? report.videos : undefined });
+    const chartRef = channelChart(report);
+    return ok({
+      source: 'YouTube RSS + herkese açık kanal sayfası',
+      ...report,
+      videos: include_all_videos ? report.videos : undefined,
+      chart_ref: chartRef ?? undefined,
+      chart_hint: chartRef ? chartHint(chartRef, uiLang()) : undefined,
+    });
   }),
 );
+
+/** Video başına izlenme çizgisi + 5 videoluk medyan + bir sonraki video için beklenti */
+function channelChart(r: ChannelReport): string | null {
+  const vids = r.videos.filter((v) => v.views !== null && v.published).sort((a, b) => (a.published < b.published ? -1 : 1));
+  if (vids.length < 4) return null;
+  const n = vids.length;
+  const dates = vids.map((v) => v.published.slice(0, 10));
+  const views = vids.map((v) => v.views ?? 0);
+  const med = rollingMedian(views, 5);
+  const exp = r.next_upload_expectation;
+  const nulls = (k: number) => Array<number | null>(k).fill(null);
+  let top = 0;
+  views.forEach((v, i) => {
+    if (v > views[top]) top = i;
+  });
+  return saveChart({
+    title: tt(`${r.name} · video başına izlenme`, `${r.name} · views per video`),
+    subtitle: tt(`Son ${n} video (yayın tarihine göre)${exp ? ' · kesikli: bir sonraki video için beklenti' : ''}`, `Last ${n} videos by publish date${exp ? ' · dashed: expectation for the next video' : ''}`),
+    note: tt(
+      'İzlenmeler RSS’in okunduğu andaki toplamlardır; yeni videolar izlenme toplamaya devam eder. Beklenti, son 10 videonun medyanı ve çeyrekler arası aralığıdır.',
+      'Views are totals at the time the feed was read; recent videos are still collecting views. The expectation is the median and interquartile range of the last 10 videos.',
+    ),
+    sources: ['YouTube RSS'],
+    spec: {
+      chartType: 'line',
+      xType: 'time',
+      evenSpacing: true,
+      categories: exp ? [...dates, exp.expected_date] : dates,
+      series: [
+        { name: tt('Video izlenmesi', 'Views per video'), values: exp ? [...views, null] : views },
+        {
+          name: tt('5 videoluk medyan', '5-video median'),
+          values: exp ? [...med, exp.median_views] : med,
+          ...(exp ? { low: [...nulls(n - 1), med[n - 1], exp.low_p25], high: [...nulls(n - 1), med[n - 1], exp.high_p75] } : {}),
+        },
+      ],
+      forecastStart: exp ? n : undefined,
+      markers: [{ index: top, label: tt('En çok izlenen', 'Most viewed') }],
+      unit: tt('izlenme', 'views'),
+      valueFormat: 'number',
+      bandLabel: tt('Olası aralık (çeyrekler arası)', 'Likely range (interquartile)'),
+      forecastLabel: tt('Sonraki video', 'Next video'),
+    },
+  });
+}
 
 server.registerTool(
   'youtube_compare',
@@ -170,7 +258,8 @@ server.registerTool(
     annotations: { readOnlyHint: true, openWorldHint: true },
   },
   safe(async ({ channels }) => {
-    const rows = [];
+    type Row = { input: string; name: string; url: string; top_video: { title: string; views: number | null; url: string } | null } & ChannelReport['stats'];
+    const rows: Array<Row | { input: string; error: string }> = [];
     for (const c of channels) {
       try {
         const r = await analyzeChannel(c);
@@ -179,7 +268,28 @@ server.registerTool(
         rows.push({ input: c, error: (e as Error).message });
       }
     }
-    return ok({ source: 'YouTube RSS', compared: rows.length, channels: rows });
+    const ok_ = rows.filter((r): r is Row => 'name' in r);
+    const charts: Record<string, string> = {};
+    if (ok_.length >= 2) {
+      charts.median_views = saveChart({
+        title: tt('Medyan izlenme (son 15 video)', 'Median views (last 15 videos)'),
+        sources: ['YouTube RSS'],
+        spec: { chartType: 'column', categories: ok_.map((r) => r.name), series: [{ name: tt('Medyan izlenme', 'Median views'), values: ok_.map((r) => r.median_views) }], unit: tt('izlenme', 'views') },
+      });
+      if (ok_.some((r) => r.median_like_rate_pct !== null))
+        charts.like_rate = saveChart({
+          title: tt('Beğeni oranı (beğeni / izlenme)', 'Like rate (likes / views)'),
+          sources: ['YouTube RSS'],
+          spec: { chartType: 'column', categories: ok_.map((r) => r.name), series: [{ name: tt('Medyan beğeni oranı', 'Median like rate'), values: ok_.map((r) => r.median_like_rate_pct) }], valueFormat: 'percent' },
+        });
+    }
+    return ok({
+      source: 'YouTube RSS',
+      compared: rows.length,
+      channels: rows,
+      chart_refs: Object.keys(charts).length ? charts : undefined,
+      chart_hint: charts.median_views ? chartHint(charts.median_views, uiLang()) : undefined,
+    });
   }),
 );
 

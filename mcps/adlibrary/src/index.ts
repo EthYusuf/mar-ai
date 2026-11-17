@@ -10,8 +10,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { Page } from 'puppeteer-core';
-import { ok, okWithImage, fail, safe, startServer, TtlCache, topCounts, round, median, sleep, MARAI_VERSION } from '../../_shared/common';
+import { ok, okWithImage, fail, safe, startServer, TtlCache, topCounts, round, median, sleep, uiLang, MARAI_VERSION } from '../../_shared/common';
 import { ChromeSession, gotoAndSettle } from '../../_shared/chrome';
+import { addDaysIso, isoDay, weekStartIso } from '../../_shared/analytics';
+import { chartHint, saveChart } from '../../_shared/charts';
+
+const tt = (tr: string, en: string) => (uiLang() === 'tr' ? tr : en);
 
 const server = new McpServer({ name: 'mar-adlibrary', version: MARAI_VERSION });
 const chrome = new ChromeSession({ name: 'adlibrary', headless: true, lang: 'en-US', viewport: { width: 1400, height: 1000 } });
@@ -200,6 +204,59 @@ function summarize(ads: Ad[]) {
   };
 }
 
+/** Okunan reklamlardan iki hazır grafik: haftalık yeni reklam çizgisi ve yayında kalma süresi dağılımı. */
+function adCharts(ads: Ad[], query: string): { launches?: string; longevity?: string } {
+  const out: { launches?: string; longevity?: string } = {};
+  const weeks = ads
+    .map((a) => a.started)
+    .filter((s): s is string => !!s)
+    .map(weekStartIso)
+    .sort();
+  if (weeks.length >= 5) {
+    const last = weekStartIso(isoDay(Date.now()));
+    const floor = addDaysIso(last, -7 * 25);
+    const first = weeks[0] < floor ? floor : weeks[0];
+    const cats: string[] = [];
+    for (let w = first; w <= last; w = addDaysIso(w, 7)) cats.push(w);
+    const older = weeks.filter((w) => w < first).length;
+    if (cats.length >= 3)
+      out.launches = saveChart({
+        title: tt(`"${query}" · haftalık yeni reklam`, `"${query}" · new ads per week`),
+        subtitle: tt('Okunan reklamların yayına girdiği hafta (reklamveren aktivitesinin göstergesi)', 'Week each sampled ad went live (a signal of advertiser activity)'),
+        note: older ? tt(`${older} reklam bu aralıktan önce başlamış ve hâlâ yayında.`, `${older} ads started before this range and are still running.`) : undefined,
+        sources: ['Meta Ad Library'],
+        spec: {
+          chartType: 'area',
+          xType: 'time',
+          categories: cats,
+          series: [{ name: tt('Yeni başlayan reklam', 'New ads started'), values: cats.map((w) => weeks.filter((x) => x === w).length) }],
+          unit: tt('reklam', 'ads'),
+        },
+      });
+  }
+  const days = ads.map((a) => a.days_running).filter((d): d is number => d !== null);
+  if (days.length >= 5) {
+    const buckets: Array<[number, number, string, string]> = [
+      [0, 7, '0-7 gün', '0-7 days'],
+      [8, 30, '8-30 gün', '8-30 days'],
+      [31, 90, '31-90 gün', '31-90 days'],
+      [91, Infinity, '90+ gün', '90+ days'],
+    ];
+    out.longevity = saveChart({
+      title: tt('Reklamlar ne kadar süredir yayında?', 'How long have the ads been running?'),
+      subtitle: tt('Uzun süre yayında kalan reklamlar genellikle kârlı olanlardır', 'Long-running ads are usually the profitable ones'),
+      sources: ['Meta Ad Library'],
+      spec: {
+        chartType: 'column',
+        categories: buckets.map((b) => tt(b[2], b[3])),
+        series: [{ name: tt('Reklam sayısı', 'Ads'), values: buckets.map(([lo, hi]) => days.filter((d) => d >= lo && d <= hi).length) }],
+        unit: tt('reklam', 'ads'),
+      },
+    });
+  }
+  return out;
+}
+
 const commonInput = {
   query: z.string().min(2).describe('Anahtar kelime veya reklamveren adı, örn. "soğuk kahve" ya da "Starbucks"'),
   country: z.string().length(2).default('TR').describe('Ülke kodu (TR, US, DE…)'),
@@ -213,7 +270,7 @@ server.registerTool(
   {
     title: 'Meta reklam araştırması',
     description:
-      'Meta Reklam Kütüphanesinde (Facebook + Instagram reklamları) anahtar kelime veya marka ile arama yapar; her reklamın reklamvereni, metni, başlığı, CTA butonu, hedef alan adı, formatı (video/görsel/carousel), yayın başlangıcı ve kaç gündür yayında olduğunu döndürür. Ayrıca format dağılımı, en çok reklam veren markalar, en sık CTA ve en uzun yayında kalan reklamların özetini çıkarır. Bir sayfa 20-30 reklam okur, daha fazlası için kaydırır (~10-30 sn).',
+      'Meta Reklam Kütüphanesinde (Facebook + Instagram reklamları) anahtar kelime veya marka ile arama yapar; her reklamın reklamvereni, metni, başlığı, CTA butonu, hedef alan adı, formatı (video/görsel/carousel), yayın başlangıcı ve kaç gündür yayında olduğunu döndürür. Ayrıca format dağılımı, en çok reklam veren markalar, en sık CTA ve en uzun yayında kalan reklamların özetini çıkarır; hazır grafikler (chart_refs) döner: haftalık yeni reklam çizgisi ve yayında kalma süresi dağılımı. Bir sayfa 20-30 reklam okur, daha fazlası için kaydırır (~10-30 sn).',
     inputSchema: {
       ...commonInput,
       advertiser: z.string().optional().describe('Sonuçları bu reklamveren adını içerenlerle sınırla'),
@@ -231,7 +288,17 @@ server.registerTool(
     if (!ads.length) {
       return ok({ source: 'Meta Ad Library (herkese açık)', search_url: res.search_url, results_estimate: res.results_estimate, ads: [], message: 'Bu aramada okunabilir reklam bulunamadı. Farklı anahtar kelime, ülke veya status=all deneyin.' });
     }
-    return ok({ source: 'Meta Ad Library (herkese açık)', fetched_at: new Date().toISOString(), search_url: res.search_url, results_estimate: res.results_estimate, summary: summarize(ads), ads });
+    const charts = adCharts(ads, advertiser ?? query);
+    return ok({
+      source: 'Meta Ad Library (herkese açık)',
+      fetched_at: new Date().toISOString(),
+      search_url: res.search_url,
+      results_estimate: res.results_estimate,
+      summary: summarize(ads),
+      chart_refs: Object.keys(charts).length ? charts : undefined,
+      chart_hint: charts.launches ? chartHint(charts.launches, uiLang()) : charts.longevity ? chartHint(charts.longevity, uiLang()) : undefined,
+      ads,
+    });
   }),
 );
 

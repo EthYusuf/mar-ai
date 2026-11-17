@@ -15,10 +15,10 @@ const SAMPLES = {
   trends: [
     ['trending_now', { geo: 'TR', limit: 3 }],
     ['news_search', { query: 'soğuk kahve', period: '30d', limit: 3 }],
-    ['interest_over_time', { terms: ['Kahve', 'Çay'], days: 60 }],
   ],
   youtube: [
     ['youtube_channel', { channel: '@MrBeast', include_all_videos: false }],
+    ['youtube_compare', { channels: ['@nike', '@adidas'] }],
     ['youtube_video', { video: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }],
   ],
   web: [
@@ -29,6 +29,13 @@ const SAMPLES = {
     ['browser_open', { url: 'https://example.com' }],
     ['browser_screenshot', {}],
     ['browser_close', {}],
+  ],
+  potential: [
+    ['trend_potential', { topics: ['Matcha', 'Kombucha'], lang: 'en', history_days: 180, horizon_days: 30 }],
+    ['trend_potential', { topics: ['Dondurma'], history_days: 365, horizon_days: 30 }],
+    ['seasonality', { topic: 'Ice cream', lang: 'en', years: 4 }],
+    ['market_potential', { countries: ['TR', 'Almanya', 'SAU'], metric: 'online_population', to_year: 2030 }],
+    ['market_potential', { countries: ['TR', 'DE'], metric: 'gdp_per_capita', from_year: 2012 }],
   ],
   instagram: [['instagram_profile', { username: 'nike', posts: 2 }]],
   adlibrary: [['meta_ads_search', { query: 'kahve', country: 'TR', limit: 8 }]],

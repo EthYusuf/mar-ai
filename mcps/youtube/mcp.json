@@ -1,12 +1,19 @@
 {
   "id": "youtube",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "entry": "dist/server.mjs",
-  "name": { "tr": "YouTube Analizi", "en": "YouTube Analytics" },
+  "name": {
+    "tr": "YouTube Analizi",
+    "en": "YouTube Analytics"
+  },
   "description": {
     "tr": "Kanal performansı, Shorts oranı, yükleme sıklığı, video detayları ve rakip kanal karşılaştırması.",
     "en": "Channel performance, Shorts share, upload frequency, video details and competitor comparison."
   },
-  "sources": ["YouTube RSS", "YouTube oEmbed", "Herkese açık sayfa meta etiketleri"],
+  "sources": [
+    "YouTube RSS",
+    "YouTube oEmbed",
+    "Herkese açık sayfa meta etiketleri"
+  ],
   "usesBrowser": false
 }

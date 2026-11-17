@@ -3,15 +3,18 @@
  * Kaynaklar (hepsi ücretsiz, anahtarsız, girişsiz ve resmi/herkese açık):
  *  - Google Trends günlük trend beslemesi (RSS)
  *  - Google News arama beslemesi (RSS)
- *  - Wikimedia sayfa görüntüleme API'si (ilgi göstergesi olarak)
+ * Konuların zaman içindeki ilgisi ve tahmini için "potential" MCP'sindeki trend_potential aracına bakın.
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { fetchJson, fetchText, ok, fail, safe, startServer, TtlCache, round, topCounts, uiLang, MARAI_VERSION } from '../../_shared/common';
+import { fetchText, ok, fail, safe, startServer, TtlCache, topCounts, parseCompactNumber, uiLang, MARAI_VERSION } from '../../_shared/common';
 import { blocks, tag, attr } from '../../_shared/xml';
+import { addDaysIso, isoDay } from '../../_shared/analytics';
+import { chartHint, saveChart } from '../../_shared/charts';
 
 const server = new McpServer({ name: 'mar-trends', version: MARAI_VERSION });
 const cache = new TtlCache<unknown>(10 * 60_000);
+const tt = (tr: string, en: string) => (uiLang() === 'tr' ? tr : en);
 
 // ---------------------------------------------------------------- trending_now
 
@@ -36,12 +39,29 @@ server.registerTool(
       items = parseTrends(r.text);
       cache.set(key, items);
     }
+    const top = items
+      .slice(0, limit)
+      .map((i) => ({ q: i.query, v: parseCompactNumber(i.approx_searches.replace(/\+/g, ''), 'en') }))
+      .filter((x): x is { q: string; v: number } => x.v !== null && x.v > 0)
+      .sort((a, b) => b.v - a.v)
+      .slice(0, 10);
+    const chartRef =
+      top.length >= 3
+        ? saveChart({
+            title: tt(`Şu an yükselen aramalar · ${geo.toUpperCase()}`, `Rising searches right now · ${geo.toUpperCase()}`),
+            subtitle: tt('Google Trends yaklaşık arama hacmi (alt sınır, örn. 2.000+)', 'Google Trends approximate search volume (lower bound, e.g. 2,000+)'),
+            sources: ['Google Trends'],
+            spec: { chartType: 'bar', categories: top.map((x) => x.q), series: [{ name: tt('Yaklaşık arama', 'Approx. searches'), values: top.map((x) => x.v) }], unit: tt('arama', 'searches'), valueFormat: 'compact' },
+          })
+        : null;
     return ok({
       source: 'Google Trends (günlük trend RSS)',
       geo: geo.toUpperCase(),
       fetched_at: new Date().toISOString(),
       count: Math.min(items.length, limit),
       trends: items.slice(0, limit),
+      chart_ref: chartRef ?? undefined,
+      chart_hint: chartRef ? chartHint(chartRef, uiLang()) : undefined,
     });
   }),
 );
@@ -90,6 +110,22 @@ server.registerTool(
     });
     all.sort((a, b) => (b.published > a.published ? 1 : -1));
     const perDay = topCounts(all.filter((a) => a.published).map((a) => a.published.slice(0, 10)), 400).sort((a, b) => (a.value > b.value ? 1 : -1));
+    let chartRef: string | null = null;
+    const days = period === '7d' ? 7 : period === '30d' ? 30 : 0;
+    if (days && all.length >= 5) {
+      const today = isoDay(Date.now());
+      const cats = Array.from({ length: days }, (_, i) => addDaysIso(today, i - days + 1));
+      const counts = new Map(perDay.map((d) => [d.value, d.count]));
+      chartRef = saveChart({
+        title: tt(`"${query}" · günlük haber yoğunluğu`, `"${query}" · daily news volume`),
+        subtitle: tt(
+          `Google News, son ${days} gün${all.length >= 100 ? ' · besleme en yeni 100 haberle sınırlı olduğu için eski günler eksik görünebilir' : ''}`,
+          `Google News, last ${days} days${all.length >= 100 ? ' · the feed is capped at the newest 100 stories, so older days may look low' : ''}`,
+        ),
+        sources: ['Google News'],
+        spec: { chartType: 'area', xType: 'time', categories: cats, series: [{ name: tt('Haber', 'Stories'), values: cats.map((d) => counts.get(d) ?? 0) }], unit: tt('haber', 'stories') },
+      });
+    }
     return ok({
       source: 'Google News (RSS)',
       query,
@@ -97,79 +133,10 @@ server.registerTool(
       total_found: all.length,
       top_sources: topCounts(all.map((a) => a.source).filter(Boolean), 8),
       articles_per_day: perDay.map((d) => ({ date: d.value, count: d.count })),
+      chart_ref: chartRef ?? undefined,
+      chart_hint: chartRef ? chartHint(chartRef, uiLang()) : undefined,
       articles: all.slice(0, limit),
     });
-  }),
-);
-
-// ---------------------------------------------------------------- wiki_interest
-
-interface PageviewsResponse {
-  items?: Array<{ timestamp: string; views: number }>;
-}
-interface WikiSearchResponse {
-  query?: { search?: Array<{ title: string }> };
-}
-
-server.registerTool(
-  'interest_over_time',
-  {
-    title: 'Zaman içinde ilgi (Wikipedia görüntülenmeleri)',
-    description:
-      'Bir veya birden fazla konunun zaman içindeki kamu ilgisini, Wikipedia sayfa görüntülenme sayılarıyla (Wikimedia resmi API) ölçer. Haftalık seri, toplam ve son 30 günün önceki 30 güne göre değişimi döner. Markalar/konular arasında ilgi karşılaştırması ve grafik için uygundur. Not: Google Trends değil, Wikipedia ilgisidir.',
-    inputSchema: {
-      terms: z.array(z.string().min(1)).min(1).max(5).describe('Konu veya marka adları, örn. ["Kahve", "Çay"]'),
-      lang: z.enum(['tr', 'en', 'de', 'fr', 'es']).optional().describe('Wikipedia dili (varsayılan: arayüz dili)'),
-      days: z.number().int().min(14).max(365).default(90),
-    },
-    annotations: { readOnlyHint: true, openWorldHint: true },
-  },
-  safe(async ({ terms, lang, days }) => {
-    const l = lang ?? uiLang();
-    const end = new Date(Date.now() - 24 * 3600_000);
-    const start = new Date(end.getTime() - (days - 1) * 24 * 3600_000);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, '');
-    const results = [];
-    for (const term of terms) {
-      const search = await fetchJson<WikiSearchResponse>(
-        `https://${l}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=1&format=json`,
-      );
-      const title = search.query?.search?.[0]?.title;
-      if (!title) {
-        results.push({ term, error: 'Wikipedia sayfası bulunamadı' });
-        continue;
-      }
-      const article = encodeURIComponent(title.replace(/ /g, '_'));
-      let pv: PageviewsResponse;
-      try {
-        pv = await fetchJson<PageviewsResponse>(
-          `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${l}.wikipedia/all-access/user/${article}/daily/${fmt(start)}/${fmt(end)}`,
-        );
-      } catch (e) {
-        results.push({ term, article: title, error: `Görüntülenme verisi alınamadı: ${(e as Error).message}` });
-        continue;
-      }
-      const daily = (pv.items ?? []).map((i) => ({ date: `${i.timestamp.slice(0, 4)}-${i.timestamp.slice(4, 6)}-${i.timestamp.slice(6, 8)}`, views: i.views }));
-      const weekly: Array<{ week_start: string; views: number }> = [];
-      for (let i = 0; i < daily.length; i += 7) {
-        const chunk = daily.slice(i, i + 7);
-        weekly.push({ week_start: chunk[0].date, views: chunk.reduce((s, d) => s + d.views, 0) });
-      }
-      const total = daily.reduce((s, d) => s + d.views, 0);
-      const last30 = daily.slice(-30).reduce((s, d) => s + d.views, 0);
-      const prev30 = daily.slice(-60, -30).reduce((s, d) => s + d.views, 0);
-      results.push({
-        term,
-        article: title,
-        url: `https://${l}.wikipedia.org/wiki/${article}`,
-        total_views: total,
-        avg_daily_views: daily.length ? Math.round(total / daily.length) : 0,
-        change_last30_vs_prev30_pct: prev30 > 0 ? round(((last30 - prev30) / prev30) * 100, 1) : null,
-        peak_day: daily.reduce((m, d) => (d.views > m.views ? d : m), { date: '', views: 0 }),
-        weekly,
-      });
-    }
-    return ok({ source: 'Wikimedia pageviews API', lang: l, from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10), results });
   }),
 );
 

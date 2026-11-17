@@ -11,8 +11,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { Page } from 'puppeteer-core';
-import { ok, fail, safe, startServer, TtlCache, parseCompactNumber, round, median, hashtags, topCounts, sleep, MARAI_VERSION } from '../../_shared/common';
+import { ok, fail, safe, startServer, TtlCache, parseCompactNumber, round, median, hashtags, topCounts, sleep, uiLang, MARAI_VERSION } from '../../_shared/common';
 import { ChromeSession, gotoAndSettle } from '../../_shared/chrome';
+import { chartHint, saveChart } from '../../_shared/charts';
+
+const tt = (tr: string, en: string) => (uiLang() === 'tr' ? tr : en);
 
 const server = new McpServer({ name: 'mar-instagram', version: MARAI_VERSION });
 // Sayfa biçimi İngilizce arayüzde sabit olduğu için ayrıştırma en-US ile yapılır.
@@ -45,7 +48,7 @@ interface ProfileReport {
   profile_picture: string;
   recent_post_urls: string[];
   analyzed_posts: PostInfo[];
-  metrics: Record<string, unknown> | null;
+  metrics: ReturnType<typeof computeMetrics>;
 }
 
 let lastVisit = 0;
@@ -190,8 +193,43 @@ server.registerTool(
     },
     annotations: { readOnlyHint: true, openWorldHint: true },
   },
-  safe(async ({ username, posts }) => ok({ source: 'Instagram herkese açık sayfalar (ziyaretçi görünümü)', fetched_at: new Date().toISOString(), ...(await analyzeProfile(username, posts)) })),
+  safe(async ({ username, posts }) => {
+    const report = await analyzeProfile(username, posts);
+    const chartRef = postsChart(report);
+    return ok({
+      source: 'Instagram herkese açık sayfalar (ziyaretçi görünümü)',
+      fetched_at: new Date().toISOString(),
+      ...report,
+      chart_ref: chartRef ?? undefined,
+      chart_hint: chartRef ? chartHint(chartRef, uiLang()) : undefined,
+    });
+  }),
 );
+
+/** Gönderi başına etkileşim (beğeni + yorum) zaman çizgisi */
+function postsChart(r: ProfileReport): string | null {
+  const posts = r.analyzed_posts.filter((p) => p.likes !== null && p.date).sort((a, b) => ((a.date ?? '') < (b.date ?? '') ? -1 : 1));
+  if (posts.length < 3) return null;
+  const values = posts.map((p) => (p.likes ?? 0) + (p.comments ?? 0));
+  let best = 0;
+  values.forEach((v, i) => {
+    if (v > values[best]) best = i;
+  });
+  return saveChart({
+    title: tt(`@${r.username} · gönderi başına etkileşim`, `@${r.username} · engagement per post`),
+    subtitle: tt(`Son ${posts.length} gönderi, beğeni + yorum`, `Last ${posts.length} posts, likes + comments`),
+    sources: ['Instagram'],
+    spec: {
+      chartType: 'line',
+      xType: 'time',
+      evenSpacing: true,
+      categories: posts.map((p) => (p.date ?? '').slice(0, 10)),
+      series: [{ name: tt('Etkileşim', 'Engagement'), values }],
+      markers: [{ index: best, label: posts[best].type === 'reel' ? tt('En iyi (Reels)', 'Best (Reel)') : tt('En iyi', 'Best') }],
+      unit: tt('etkileşim', 'interactions'),
+    },
+  });
+}
 
 server.registerTool(
   'instagram_post',
@@ -224,7 +262,18 @@ server.registerTool(
     annotations: { readOnlyHint: true, openWorldHint: true },
   },
   safe(async ({ usernames, posts_per_account }) => {
-    const rows = [];
+    type Row = {
+      username: string;
+      name: string;
+      followers: number | null;
+      posts_total: number | null;
+      avg_likes: number | null;
+      avg_comments: number | null;
+      engagement_rate_pct: number | null;
+      reels_share_pct: number | null;
+      posts_per_week: number | null;
+    };
+    const rows: Array<Row | { username: string; error: string }> = [];
     for (const u of usernames) {
       try {
         const r = await analyzeProfile(u, posts_per_account);
@@ -243,7 +292,26 @@ server.registerTool(
         rows.push({ username: normalizeUsername(u), error: (e as Error).message });
       }
     }
-    return ok({ source: 'Instagram herkese açık sayfalar', accounts: rows });
+    const good = rows.filter((r): r is Row => 'name' in r);
+    const charts: Record<string, string> = {};
+    if (good.filter((r) => r.engagement_rate_pct !== null).length >= 2)
+      charts.engagement_rate = saveChart({
+        title: tt('Etkileşim oranı (beğeni + yorum / takipçi)', 'Engagement rate (likes + comments / followers)'),
+        sources: ['Instagram'],
+        spec: { chartType: 'column', categories: good.map((r) => `@${r.username}`), series: [{ name: tt('Etkileşim oranı', 'Engagement rate'), values: good.map((r) => r.engagement_rate_pct) }], valueFormat: 'percent' },
+      });
+    if (good.filter((r) => r.followers !== null).length >= 2)
+      charts.followers = saveChart({
+        title: tt('Takipçi sayısı', 'Followers'),
+        sources: ['Instagram'],
+        spec: { chartType: 'bar', categories: good.map((r) => `@${r.username}`), series: [{ name: tt('Takipçi', 'Followers'), values: good.map((r) => r.followers) }], valueFormat: 'compact' },
+      });
+    return ok({
+      source: 'Instagram herkese açık sayfalar',
+      accounts: rows,
+      chart_refs: Object.keys(charts).length ? charts : undefined,
+      chart_hint: charts.engagement_rate ? chartHint(charts.engagement_rate, uiLang()) : undefined,
+    });
   }),
 );
 

@@ -2,12 +2,31 @@ import type { Lang } from '../../shared/types';
 
 const locale = (lang: Lang) => (lang === 'tr' ? 'tr-TR' : 'en-US');
 
+// Intl biçimlendiricileri pahalıdır (her oluşturmada yerel veri yüklenir); grafikler yüzlerce etiket
+// biçimlendirdiği için seçeneklere göre önbelleğe alınır.
+const numberFormats = new Map<string, Intl.NumberFormat>();
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+
+export function numberFormat(lang: Lang, options: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const key = `${lang}|${JSON.stringify(options)}`;
+  let f = numberFormats.get(key);
+  if (!f) numberFormats.set(key, (f = new Intl.NumberFormat(locale(lang), options)));
+  return f;
+}
+
+export function dateFormat(lang: Lang, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${lang}|${JSON.stringify(options)}`;
+  let f = dateFormats.get(key);
+  if (!f) dateFormats.set(key, (f = new Intl.DateTimeFormat(locale(lang), options)));
+  return f;
+}
+
 export function fmtCompact(n: number, lang: Lang): string {
-  return new Intl.NumberFormat(locale(lang), { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+  return numberFormat(lang, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 }
 
 export function fmtNumber(n: number, lang: Lang): string {
-  return new Intl.NumberFormat(locale(lang), { maximumFractionDigits: 2 }).format(n);
+  return numberFormat(lang, { maximumFractionDigits: 2 }).format(n);
 }
 
 /** 10.000'in altındaki sayıları tam ("1.000"), üstündekileri kısaltılmış ("12,4 B") yazar. */
@@ -18,7 +37,7 @@ export function fmtShort(n: number, lang: Lang): string {
 export function fmtDate(iso: string, lang: Lang): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
-  return new Intl.DateTimeFormat(locale(lang), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
+  return dateFormat(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(d);
 }
 
 /** Uzak görselleri ana süreçteki vekil üzerinden yükler (Instagram/Meta CDN kısıtlamalarına karşı). */

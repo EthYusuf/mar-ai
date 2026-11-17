@@ -13,7 +13,7 @@ const tr = {
     ads: 'Rakip ve sektör reklamlarını Meta Reklam Kütüphanesi üzerinden analiz eder: mesajlar, formatlar, CTA\'lar ve en uzun yayında kalan reklamlar.',
     reels: 'Kanca alternatifleri, sahne sahne storyboard, açıklama metni ve yayın önerisiyle kısa video planları hazırlar.',
     competitors: 'Rakiplerin Instagram, YouTube ve web sitelerini karşılaştırır: etkileşim, içerik stratejisi ve pazarlama altyapısı.',
-    trends: 'Yükselen aramaları, gündemi ve ilgi değişimini takip eder; içerik fırsatlarını çıkarır.',
+    trends: 'Yükselen aramaları ve ilgi değişimini takip eder; konuların potansiyelini 30 günlük tahminle, kampanya zamanını sezonsallıkla ölçer.',
   } as Record<ModuleId, string>,
   suggestions: {
     ads: [
@@ -32,9 +32,10 @@ const tr = {
       '@nike ve @adidas YouTube kanallarının Shorts performansını karşılaştır',
     ],
     trends: [
+      'Matcha ve kombuchanın potansiyelini 30 günlük tahminle karşılaştır',
+      'Dondurma kampanyası için en iyi ay hangisi? Sezonsallığı göster',
+      "Türkiye, Almanya ve Suudi Arabistan'ın 2030'a kadar çevrim içi kitle potansiyeli",
       "Türkiye'de bugün yükselen aramalardan içerik fırsatlarını çıkar",
-      "'Matcha' konusuna ilgi son 3 ayda nasıl değişti?",
-      'Kahve sektöründeki son 30 günün haberlerini özetle',
     ],
   } as Record<ModuleId, string[]>,
   placeholder: {
@@ -194,6 +195,17 @@ const tr = {
     unknown: 'Beklenmeyen bir hata oluştu.',
   } as Record<string, string>,
   pdfSaved: 'PDF kaydedildi',
+  chart: {
+    forecast: 'Tahmin',
+    band: '%80 aralık',
+    table: 'Tablo',
+    chart: 'Grafik',
+    showTable: 'Veriyi tablo olarak göster',
+    showChart: 'Grafiği göster',
+    date: 'Tarih',
+    category: 'Kategori',
+    keyboardHint: 'Grafik. Değerleri gezmek için sol ve sağ ok tuşlarını kullan.',
+  },
 };
 
 export type Dict = typeof tr;
@@ -205,13 +217,18 @@ const en: Dict = {
     ads: 'Analyzes competitor and category ads via the Meta Ad Library: messages, formats, CTAs and the longest-running ads.',
     reels: 'Builds short-video plans with hook options, a scene-by-scene storyboard, caption and posting advice.',
     competitors: 'Compares competitors across Instagram, YouTube and their websites: engagement, content strategy and marketing stack.',
-    trends: 'Tracks rising searches, news and shifts in interest to surface content opportunities.',
+    trends: 'Tracks rising searches and shifts in interest, forecasts a topic’s potential 30 days ahead and times campaigns with seasonality.',
   },
   suggestions: {
     ads: ['Analyze cold brew coffee ads running in the US', 'Which messages stand out in Nike’s Instagram ads?', 'Find the longest-running ads in the skincare category'],
     reels: ['Plan a 30-second Reel for our new cold brew', 'Give me 3 Reels ideas for a coffee shop this week', 'Write and score 5 hooks for a running shoe'],
     competitors: ['Compare the Instagram accounts @nike and @adidas', 'Audit the marketing stack of starbucks.com', 'Compare Shorts performance of @nike and @adidas on YouTube'],
-    trends: ['Find content opportunities in today’s rising US searches', 'How has interest in "Matcha" changed in 3 months?', 'Summarize coffee industry news from the last 30 days'],
+    trends: [
+      'Compare the potential of matcha and kombucha with a 30-day forecast',
+      'When is the best month for an ice cream campaign? Show the seasonality',
+      'Online audience potential of Türkiye, Germany and Saudi Arabia to 2030',
+      'Find content opportunities in today’s rising US searches',
+    ],
   },
   placeholder: {
     ads: 'e.g. Analyze Instagram ads of coffee brands',
@@ -357,6 +374,17 @@ const en: Dict = {
     unknown: 'An unexpected error occurred.',
   },
   pdfSaved: 'PDF saved',
+  chart: {
+    forecast: 'Forecast',
+    band: '80% range',
+    table: 'Table',
+    chart: 'Chart',
+    showTable: 'Show the data as a table',
+    showChart: 'Show the chart',
+    date: 'Date',
+    category: 'Category',
+    keyboardHint: 'Chart. Use the left and right arrow keys to read values.',
+  },
 };
 
 export const dictionaries: Record<Lang, Dict> = { tr, en };

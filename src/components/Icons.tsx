@@ -17,6 +17,18 @@ export const Icon = {
       <path d="M7 19l5-6 4 4 7-8" fill="none" stroke="var(--accent-ink)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  Table: (p: P) => (
+    <Svg {...p}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+      <path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10" />
+    </Svg>
+  ),
+  Chart: (p: P) => (
+    <Svg {...p}>
+      <path d="M4 19.5h16" />
+      <path d="M5 15l4.5-5 3.5 3.5L19.5 7" />
+    </Svg>
+  ),
   Search: (p: P) => (
     <Svg {...p}>
       <circle cx="11" cy="11" r="6.5" />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { CardItem, Panel } from '../../shared/types';
 import { useT } from '../i18n';
 import { clockTime, imgSrc } from '../lib/format';
-import { BarChart, ColumnChart, Legend, LineChart } from './charts';
+import { BarChart, ChartLegend, ChartTable, ColumnChart, LineChart } from './charts';
 import { Icon } from './Icons';
 import { Markdown } from './Markdown';
 
@@ -59,6 +59,11 @@ function KpiPanel({ panel }: { panel: PanelOf<'kpis'> }) {
             <div className="kpi-value" style={k.value.length > 9 ? { fontSize: 22 } : k.value.length > 6 ? { fontSize: 27 } : undefined}>
               {k.value}
             </div>
+            {typeof k.meter === 'number' && (
+              <span className="meter kpi-meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(k.meter)} aria-label={k.label}>
+                <span style={{ width: `${Math.max(2, Math.min(100, k.meter))}%` }} />
+              </span>
+            )}
             {k.sub && (
               <div className={`kpi-sub${k.trend === 'up' ? ' trend-up' : k.trend === 'down' ? ' trend-down' : ''}`}>
                 {k.trend === 'up' ? '▲ ' : k.trend === 'down' ? '▼ ' : ''}
@@ -73,17 +78,37 @@ function KpiPanel({ panel }: { panel: PanelOf<'kpis'> }) {
 }
 
 function ChartPanel({ panel }: { panel: PanelOf<'chart'> }) {
-  const Chart = panel.chartType === 'line' ? LineChart : panel.chartType === 'column' ? ColumnChart : BarChart;
+  const t = useT();
+  const [view, setView] = useState<'chart' | 'table'>('chart');
+  const lineLike = panel.chartType === 'line' || panel.chartType === 'area';
   return (
-    <section className="card" aria-label={panel.title}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
+    <section className="card chart-card" aria-label={panel.title}>
+      <div className="chart-head">
+        <div style={{ minWidth: 0 }}>
           <h3 className="card-title">{panel.title}</h3>
           {panel.subtitle && <div className="card-sub">{panel.subtitle}</div>}
         </div>
-        <Legend series={panel.series} />
+        <button
+          type="button"
+          className="btn btn-sm chart-toggle no-print"
+          aria-pressed={view === 'table'}
+          title={view === 'chart' ? t.chart.showTable : t.chart.showChart}
+          onClick={() => setView((v) => (v === 'chart' ? 'table' : 'chart'))}
+        >
+          {view === 'chart' ? <Icon.Table size={14} /> : <Icon.Chart size={14} />}
+          {view === 'chart' ? t.chart.table : t.chart.chart}
+        </button>
       </div>
-      <Chart categories={panel.categories} series={panel.series} unit={panel.unit} />
+      {view === 'chart' && <ChartLegend spec={panel} />}
+      {view === 'table' ? (
+        <ChartTable spec={panel} />
+      ) : lineLike ? (
+        <LineChart spec={panel} height={panel.width === 'half' ? 250 : 300} />
+      ) : panel.chartType === 'column' ? (
+        <ColumnChart spec={panel} />
+      ) : (
+        <BarChart spec={panel} />
+      )}
       {panel.note && <div className="chart-note">{panel.note}</div>}
     </section>
   );

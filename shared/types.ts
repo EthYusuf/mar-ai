@@ -108,11 +108,57 @@ export interface KpiItem {
   value: string;
   sub?: string;
   trend?: 'up' | 'down' | 'flat';
+  /** 0-100 arası ince ölçer çubuğu (örn. potansiyel skoru) */
+  meter?: number;
 }
+
+export type ChartType = 'line' | 'area' | 'bar' | 'column';
+export type ValueFormat = 'number' | 'compact' | 'percent' | 'decimal';
 
 export interface ChartSeries {
   name: string;
-  values: number[];
+  /** null = veri yok; çizgi o noktada kesilir */
+  values: Array<number | null>;
+  /** Güven/aralık bandının alt ve üst sınırları (values ile aynı uzunlukta; bant olmayan yerde null) */
+  low?: Array<number | null>;
+  high?: Array<number | null>;
+}
+
+export interface ChartMarker {
+  /** categories içindeki sıra */
+  index: number;
+  label: string;
+}
+
+/** Grafiğin veri kısmı. MCP araçları bunu dosyaya yazar (chart_ref), panel aracı okur. */
+export interface ChartSpec {
+  chartType: ChartType;
+  categories: string[];
+  /** 'time': categories ISO tarihleri (YYYY-MM-DD, YYYY-MM veya YYYY); x ekseni zamana orantılı çizilir */
+  xType?: 'time' | 'category';
+  /** true: tarih etiketleri korunur ama noktalar eşit aralıklı çizilir (video/gönderi başına seriler için) */
+  evenSpacing?: boolean;
+  series: ChartSeries[];
+  /** Bu sıradan itibaren değerler tahmindir: kesikli çizgi + bant + "Bugün" ayracı */
+  forecastStart?: number;
+  markers?: ChartMarker[];
+  unit?: string;
+  valueFormat?: ValueFormat;
+  /** Bandın anlamı, örn. "%80 tahmin aralığı" veya "Yıllar arası aralık" */
+  bandLabel?: string;
+  /** Tahmin bölgesinin etiketi (varsayılan "Tahmin"), örn. "Projeksiyon" */
+  forecastLabel?: string;
+}
+
+/** MCP sunucularının grafik dosyası biçimi: <MARAI_DATA_DIR>/charts/<chart_ref>.json */
+export interface StoredChart {
+  v: 1;
+  created: string;
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  sources?: string[];
+  spec: ChartSpec;
 }
 
 export interface CardItem {
@@ -139,18 +185,14 @@ export interface StoryScene {
 
 export type Panel =
   | { kind: 'kpis'; id: string; title?: string; items: KpiItem[] }
-  | {
+  | ({
       kind: 'chart';
       id: string;
       title: string;
       subtitle?: string;
-      chartType: 'bar' | 'column' | 'line';
-      categories: string[];
-      series: ChartSeries[];
-      unit?: string;
       note?: string;
       width: 'half' | 'full';
-    }
+    } & ChartSpec)
   | { kind: 'cards'; id: string; title: string; subtitle?: string; cards: CardItem[] }
   | {
       kind: 'storyboard';

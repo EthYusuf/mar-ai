@@ -3,9 +3,12 @@
  * uygulamanın kendi içinde çalışan MCP sunucusu ("panels").
  */
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
-import type { Panel, Report } from '../shared/types';
+import type { ChartSpec, Panel, Report, StoredChart } from '../shared/types';
+import { dataDir } from './paths';
 
 type Listener = (report: Report | null) => void;
 
@@ -51,13 +54,72 @@ const error = (t: string) => ({ content: [{ type: 'text' as const, text: t }], i
 const sourcesField = z.array(z.string()).max(8).optional().describe('Bu paneldeki verinin kaynakları, örn. ["Meta Ad Library", "Instagram"]');
 const newId = () => randomUUID().slice(0, 8);
 
+// ---------------------------------------------------------------- Grafik devri (chart_ref)
+
+const CHART_REF = /^ch_[a-z0-9]{6,40}$/;
+const numOrNull = z.union([z.number(), z.null()]);
+const seriesSchema = z.object({
+  name: z.string().max(80),
+  values: z.array(numOrNull),
+  low: z.array(numOrNull).optional(),
+  high: z.array(numOrNull).optional(),
+});
+const markerSchema = z.object({ index: z.number().int().min(0), label: z.string().max(40) });
+/** MCP'lerin yazdığı grafik dosyası da denetlenir (kullanıcı MCP'leri de chart_ref üretebilir). */
+const storedChartSchema = z.object({
+  v: z.literal(1),
+  title: z.string().max(200).optional(),
+  subtitle: z.string().max(400).optional(),
+  note: z.string().max(800).optional(),
+  sources: z.array(z.string().max(120)).max(8).optional(),
+  spec: z.object({
+    chartType: z.enum(['line', 'area', 'bar', 'column']),
+    categories: z.array(z.string().max(100)).min(1).max(1500),
+    xType: z.enum(['time', 'category']).optional(),
+    evenSpacing: z.boolean().optional(),
+    series: z.array(seriesSchema).min(1).max(4),
+    forecastStart: z.number().int().min(1).optional(),
+    markers: z.array(markerSchema).max(8).optional(),
+    unit: z.string().max(40).optional(),
+    valueFormat: z.enum(['number', 'compact', 'percent', 'decimal']).optional(),
+    bandLabel: z.string().max(60).optional(),
+    forecastLabel: z.string().max(40).optional(),
+  }),
+});
+
+function readStoredChart(ref: string): { chart: Omit<StoredChart, 'created'> } | { error: string } {
+  if (!CHART_REF.test(ref)) return { error: `Geçersiz chart_ref: ${ref}` };
+  const file = path.join(dataDir('mcp-data', 'charts'), `${ref}.json`);
+  if (!fs.existsSync(file)) return { error: `chart_ref bulunamadı (${ref}). Grafiği üreten aracı yeniden çağırıp yeni chart_ref kullan.` };
+  try {
+    const parsed = storedChartSchema.safeParse(JSON.parse(fs.readFileSync(file, 'utf8')));
+    if (!parsed.success) return { error: `chart_ref dosyası geçersiz: ${parsed.error.issues[0]?.message ?? ''}` };
+    return { chart: parsed.data };
+  } catch (err) {
+    return { error: `chart_ref okunamadı: ${(err as Error).message}` };
+  }
+}
+
+function validateSpec(spec: ChartSpec): string | null {
+  const n = spec.categories.length;
+  for (const s of spec.series) {
+    if (s.values.length !== n) return `"${s.name}" serisinde ${s.values.length} değer var ama ${n} kategori var. Uzunlukları eşitleyip tekrar çağır.`;
+    if (s.low && s.low.length !== n) return `"${s.name}" serisinin low dizisi ${n} uzunlukta olmalı.`;
+    if (s.high && s.high.length !== n) return `"${s.name}" serisinin high dizisi ${n} uzunlukta olmalı.`;
+    if (!s.values.some((v) => v !== null && Number.isFinite(v))) return `"${s.name}" serisinde hiç sayı yok.`;
+  }
+  if (spec.forecastStart !== undefined && spec.forecastStart >= n) return `forecast_start (${spec.forecastStart}) kategori sayısından (${n}) küçük olmalı.`;
+  if (spec.markers?.some((m) => m.index >= n)) return 'Bir işaretçinin index değeri kategori sayısını aşıyor.';
+  return null;
+}
+
 export function createPanelServer(store: ReportStore) {
   return createSdkMcpServer({
     name: 'panels',
     version: '0.1.0',
     alwaysLoad: true,
     instructions:
-      'Bu araçlar kullanıcının ekranındaki rapor alanına profesyonel paneller çizer. Araştırma sonuçlarını sohbette uzun uzun yazmak yerine bu panellerle göster: önce report_start, sonra show_kpis / show_chart / show_cards / show_insights. Reels planı için show_storyboard kullan. Yalnızca araçlardan gelen gerçek verileri göster; tahminleri açıkça belirt.',
+      'Bu araçlar kullanıcının ekranındaki rapor alanına profesyonel paneller çizer. Sonuçları uzun metinle değil GRAFİKLERLE anlat: önce report_start, sonra show_kpis ve en az bir show_chart; ardından show_cards / show_insights. Bir araç chart_ref döndürdüyse show_chart({ chart_ref }) çağır, sayıları kopyalama. Zaman boyutu olan her veri çizgi grafiktir. Reels planı için show_storyboard. Yalnızca araçlardan gelen gerçek verileri göster; tahminleri açıkça belirt.',
     tools: [
       tool(
         'report_start',
@@ -84,6 +146,7 @@ export function createPanelServer(store: ReportStore) {
                 value: z.string().max(48),
                 sub: z.string().max(200).optional().describe('Açıklama veya karşılaştırma, örn. "Geçen aya göre +%12"'),
                 trend: z.enum(['up', 'down', 'flat']).optional(),
+                meter: z.number().min(0).max(100).optional().describe('0-100 ince ölçer çubuğu, örn. potansiyel skoru'),
               }),
             )
             .min(1)
@@ -97,26 +160,47 @@ export function createPanelServer(store: ReportStore) {
       ),
       tool(
         'show_chart',
-        'Grafik çizer. bar: yatay çubuk (kategori karşılaştırma, uzun etiketler), column: dikey sütun (az sayıda kategori veya gruplu karşılaştırma), line: zaman serisi. En fazla 4 seri ve 24 kategori. Her serinin values dizisi categories ile aynı uzunlukta olmalı. Tek ölçü birimi kullan; farklı ölçekler için ayrı grafik çiz.',
+        'Grafik çizer. Bir MCP aracı chart_ref döndürdüyse YALNIZCA chart_ref ver: veri dosyadan birebir okunur (title/subtitle/note isteğe bağlı değiştirilebilir). Elle grafik için chart_type + categories + series ver: line zaman serisi ve trend, area tek serili zaman serisi, bar sıralama (uzun etiketler), column az kategori karşılaştırma. values içinde null = veri yok. Tahmin göstermek için forecast_start (tahminin başladığı kategori sırası) ve serilere low/high (aynı uzunlukta, bant olmayan yerde null) ekle. x_type "time" ise categories ISO tarih olmalı. En fazla 4 seri; grafik başına tek ölçü birimi.',
         {
-          title: z.string().max(160),
+          chart_ref: z.string().optional().describe('MCP aracının döndürdüğü grafik kimliği, örn. "ch_mwk1x9..."'),
+          title: z.string().max(160).optional(),
           subtitle: z.string().max(300).optional(),
-          chart_type: z.enum(['bar', 'column', 'line']),
-          categories: z.array(z.string().max(100)).min(1).max(24),
-          series: z.array(z.object({ name: z.string().max(80), values: z.array(z.number()) })).min(1).max(4),
+          chart_type: z.enum(['line', 'area', 'bar', 'column']).optional(),
+          categories: z.array(z.string().max(100)).min(1).max(120).optional(),
+          x_type: z.enum(['time', 'category']).optional(),
+          series: z.array(seriesSchema).min(1).max(4).optional(),
+          forecast_start: z.number().int().min(1).optional(),
+          markers: z.array(markerSchema).max(6).optional().describe('Dikey işaretler, örn. [{ index: 12, label: "Kampanya" }]'),
           unit: z.string().max(40).optional().describe('Birim, örn. "%", "reklam", "izlenme"'),
-          note: z.string().max(500).optional().describe('Grafiğin altındaki kısa yorum veya kaynak notu'),
+          value_format: z.enum(['number', 'compact', 'percent', 'decimal']).optional().describe('percent: değerler 0-100 arası yüzde'),
+          note: z.string().max(600).optional().describe('Grafiğin altındaki kısa yorum veya kaynak notu'),
           width: z.enum(['half', 'full']).optional().describe('half: yan yana iki grafik için'),
           sources: sourcesField,
         },
-        async ({ title, subtitle, chart_type, categories, series, unit, note, width, sources }) => {
-          const bad = series.find((s) => s.values.length !== categories.length);
-          if (bad) return error(`"${bad.name}" serisinde ${bad.values.length} değer var ama ${categories.length} kategori var. Uzunlukları eşitleyip tekrar çağır.`);
+        async (a) => {
+          let spec: ChartSpec;
+          let meta: { title?: string; subtitle?: string; note?: string; sources?: string[] } = {};
+          if (a.chart_ref) {
+            const loaded = readStoredChart(a.chart_ref.trim());
+            if ('error' in loaded) return error(loaded.error);
+            spec = { ...loaded.chart.spec };
+            meta = loaded.chart;
+          } else {
+            if (!a.chart_type || !a.categories || !a.series) return error('Ya chart_ref ya da chart_type + categories + series ver.');
+            spec = { chartType: a.chart_type, categories: a.categories, xType: a.x_type, series: a.series, forecastStart: a.forecast_start, markers: a.markers };
+          }
+          if (a.unit) spec.unit = a.unit;
+          if (a.value_format) spec.valueFormat = a.value_format;
+          const problem = validateSpec(spec);
+          if (problem) return error(problem);
+          const title = a.title ?? meta.title ?? 'Grafik';
+          const lineLike = spec.chartType === 'line' || spec.chartType === 'area';
           store.add(
-            { kind: 'chart', id: newId(), title, subtitle, chartType: chart_type, categories, series, unit, note, width: width ?? (chart_type === 'line' ? 'full' : 'half') },
-            sources,
+            { kind: 'chart', id: newId(), title, subtitle: a.subtitle ?? meta.subtitle, note: a.note ?? meta.note, width: a.width ?? (lineLike ? 'full' : 'half'), ...spec },
+            [...(meta.sources ?? []), ...(a.sources ?? [])],
           );
-          return text('Grafik eklendi.');
+          const fc = spec.forecastStart !== undefined ? `, son ${spec.categories.length - spec.forecastStart} nokta tahmin` : '';
+          return text(`Grafik eklendi: "${title}" — ${spec.series.length} seri, ${spec.categories.length} nokta${fc}.`);
         },
       ),
       tool(

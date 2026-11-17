@@ -5,6 +5,8 @@ description: Rakip veya sektör reklam araştırması (Meta/Instagram/Facebook r
 
 # Reklam araştırması iş akışı
 
+Rapor grafiklerle anlatılır: araçların döndürdüğü `chart_refs` değerlerini `mcp__panels__show_chart({ chart_ref })` ile çiz.
+
 1. **Kapsamı netleştir** (sormadan makul varsayım yap): anahtar kelime/marka, ülke (varsayılan TR), platform (varsayılan tümü), yalnızca aktif reklamlar.
 2. **Veri topla**
    - `mcp__adlibrary__meta_ads_search` ile 25-40 reklam oku. Marka odaklıysa `advertiser` filtresi kullan.
@@ -18,7 +20,8 @@ description: Rakip veya sektör reklam araştırması (Meta/Instagram/Facebook r
 4. **Raporla** (panel araçları)
    - `report_start` → başlık: "<konu> reklam analizi", alt başlık: kapsam.
    - `show_kpis`: okunan reklam, aktif reklam, ortalama yayın süresi (gün), en sık format.
-   - `show_chart` (bar): format dağılımı; (bar) en çok reklam veren markalar; gerekirse (column) CTA dağılımı.
+   - `show_chart({ chart_ref })`: `chart_refs.launches` (haftalık yeni reklam çizgisi) ve `chart_refs.longevity` (yayında kalma süresi dağılımı).
+   - `show_chart` (bar): format dağılımı ve en çok reklam veren markalar (summary verisiyle).
    - `show_cards`: en uzun yayında kalan 3-6 reklam — title=reklamveren, badge="Yayında N gün", image=reklam görseli, quote=kanca, body=metin, why=neden işe yarıyor, url=library_url.
    - `show_insights`: 3-5 uygulanabilir içgörü + next_step (örn. "Bu içgörülerle Reels planla").
 5. Sohbette 3-5 cümlelik özet ver. Harcama/gösterim verisi Meta tarafından paylaşılmadığını gerekirse belirt.

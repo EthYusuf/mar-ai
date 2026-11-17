@@ -1,7 +1,7 @@
 {
   "name": "mar-ai",
-  "version": "0.1.0",
-  "description": "mar-ai pazarlama becerileri: reklam araştırması, Reels planlama, rakip analizi ve trend radarı.",
+  "version": "0.2.0",
+  "description": "mar-ai pazarlama becerileri: reklam araştırması, Reels planlama, rakip analizi, trend radarı ve potansiyel analizi.",
   "author": { "name": "mar-ai contributors" },
   "license": "MIT"
 }

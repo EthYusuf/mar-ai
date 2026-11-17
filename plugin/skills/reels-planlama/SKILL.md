@@ -9,6 +9,7 @@ description: Instagram Reels, TikTok veya YouTube Shorts için kısa video plan�
 2. **İlham ve kanıt** (hızlı tut):
    - Gerekirse `mcp__adlibrary__meta_ads_search` (media=video) ile sektördeki video reklam kancalarına bak.
    - `mcp__trends__trending_now` ile gündemden yararlanılabilecek bir konu var mı kontrol et (zorlama).
+   - Konu mevsimselse `mcp__potential__seasonality` ile yayın zamanını, yükselen bir konuysa `mcp__potential__trend_potential` ile potansiyelini doğrula; grafiği `show_chart({ chart_ref })` ile rapora ekle.
    - Rakip hesap verilmişse `mcp__instagram__instagram_profile` ile Reels performansına bak.
 3. **Kancalar**: ilk 2 saniye için 3 farklı tipte kanca yaz (Soru, Gösterim, Merak, Şok, Sosyal kanıt). Her birine 0-100 arası "AI tahmini" kanca gücü puanı ver (netlik, merak, görsel güç, ilk saniyede ürün/yüz).
 4. **Storyboard**: 5-8 sahne; sahneler 0'dan toplam süreye kesintisiz. Kalıp: Kanca → Sorun → Ürün → Gösterim → Sonuç → Çağrı (CTA). Her sahne: çekim tipi, ekran yazısı (kısa!), görüntü tarifi, ses/dış ses. Altyazıyla sessiz izlemeye uygun olsun.

@@ -34,7 +34,6 @@
   <img alt="Powered by Claude" src="https://img.shields.io/badge/powered%20by-Claude-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="7 MCP sunucusu" src="https://img.shields.io/badge/MCP-7%20yerle%C5%9Fik%20sunucu-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="API anahtarı gerekmez" src="https://img.shields.io/badge/API%20anahtar%C4%B1-gerekmez-199E70?style=flat-square&labelColor=0A0C10">
-  <a href="https://github.com/EthYusuf/mar-ai/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/EthYusuf/mar-ai/ci.yml?branch=main&style=flat-square&labelColor=0A0C10&label=CI"></a>
 </p>
 
 <img src="docs/media/tr-potential-forecast.gif" alt="mar-ai “matcha mı kombucha mı?” sorusunu yanıtlıyor: araçlar çalışıyor, rapor potansiyel skorları, kesikli 30 günlük tahmin ve %80 aralıklı çizgi grafik, haber grafikleri ve bir kararla doluyor" width="100%">

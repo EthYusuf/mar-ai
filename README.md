@@ -34,7 +34,6 @@
   <img alt="Powered by Claude" src="https://img.shields.io/badge/powered%20by-Claude-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="7 MCP servers" src="https://img.shields.io/badge/MCP-7%20built--in%20servers-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="No API key" src="https://img.shields.io/badge/API%20key-not%20needed-199E70?style=flat-square&labelColor=0A0C10">
-  <a href="https://github.com/EthYusuf/mar-ai/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/EthYusuf/mar-ai/ci.yml?branch=main&style=flat-square&labelColor=0A0C10&label=CI"></a>
 </p>
 
 <img src="docs/media/potential-forecast.gif" alt="mar-ai answering “matcha or kombucha?”: tools run, then the report fills with potential scores, a line chart with a dashed 30-day forecast and an 80% range, seasonality charts and a recommendation" width="100%">

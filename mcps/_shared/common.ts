@@ -9,8 +9,9 @@ import fs from 'node:fs';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-export const MARAI_VERSION = process.env.MARAI_VERSION || '0.1.0';
-export const USER_AGENT = `mar-ai/${MARAI_VERSION} (open-source marketing research assistant)`;
+export const MARAI_VERSION = process.env.MARAI_VERSION || process.env.MARAI_BUILD_VERSION || '0.0.0';
+/** API kullanım kuralları (örn. Wikimedia) istemcinin kendini ve projesini tanıtmasını ister. */
+export const USER_AGENT = `mar-ai/${MARAI_VERSION} (+https://github.com/EthYusuf/mar-ai; open-source marketing research assistant)`;
 
 /** Uygulamanın kullanıcı verisi klasörü (Electron tarafından MARAI_DATA_DIR ile verilir). */
 export function dataDir(...sub: string[]): string {

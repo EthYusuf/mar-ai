@@ -1,0 +1,18 @@
+{
+  "id": "potential",
+  "version": "0.2.0",
+  "entry": "dist/server.mjs",
+  "name": {
+    "tr": "Potansiyel ve Tahmin",
+    "en": "Potential & Forecast"
+  },
+  "description": {
+    "tr": "Konu ve markaların ilgi trendi, 30 günlük tahmin ve potansiyel skoru; sezonsallık ve kampanya zamanlaması; ülkelerin çevrim içi kitle potansiyeli ve 2030 projeksiyonu.",
+    "en": "Interest trends with a 30-day forecast and potential score, seasonality and campaign timing, and countries' online audience potential projected to 2030."
+  },
+  "sources": [
+    "Wikimedia Pageviews API",
+    "Our World in Data (ITU, UN WPP, World Bank)"
+  ],
+  "usesBrowser": false
+}

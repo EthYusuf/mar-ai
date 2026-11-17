@@ -7,3 +7,6 @@ mcps/*/dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# LinkedIn paylaşım kiti (yerel, depoya girmez)
+linkedin/

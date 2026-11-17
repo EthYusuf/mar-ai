@@ -83,6 +83,38 @@ await startServer(server, 'mar-example');
 | `ChromeSession` (`chrome.ts`) | Opens the installed Chromium browser headless with a separate profile and closes it when idle. Honours the browser chosen in Settings. |
 | `blocks` / `tag` / `attr` (`xml.ts`) | RSS / Atom parsing. |
 | `parseCompactNumber`, `median`, `topCounts`, `hashtags` | Number and text utilities. |
+| `saveChart` / `chartHint` (`charts.ts`) | Save chart data and return a `chart_ref` the report draws exactly (see below). |
+| `forecastSeries`, `smoothedForecast`, `forecastTotal` (`analytics.ts`) | Damped-trend Holt-Winters forecast with a simulated 80% range. |
+| `rollingMean`, `rollingMedian`, `pctChange`, `coefVar`, `linearFit`, `weekStartIso` (`analytics.ts`) | Time-series statistics and date helpers. |
+| `resolveArticle`, `dailyViews`, `monthlyViews` (`wiki.ts`) | Wikipedia article lookup and Wikimedia pageviews. |
+
+## Returning a chart (`chart_ref`)
+
+Do not make Claude copy hundreds of numbers into `show_chart`. Save the series and return the reference instead: the
+report draws exactly what your tool produced, and the model only decides where the chart goes.
+
+```ts
+import { saveChart, chartHint } from '../../_shared/charts';
+
+const chartRef = saveChart({
+  title: 'Example · daily interest and 30-day forecast',
+  subtitle: '7-day average · dashed line is the forecast',
+  sources: ['Example API'],
+  spec: {
+    chartType: 'line',            // 'line' | 'area' | 'bar' | 'column'
+    xType: 'time',                // categories are ISO dates: YYYY-MM-DD, YYYY-MM or YYYY
+    categories: dates,            // history + forecast dates
+    series: [{ name: 'Example', values, low, high }], // null = no value; low/high = band
+    forecastStart: history.length, // from this index on: dashed line + forecast zone
+    markers: [{ index: peakIndex, label: 'Peak' }],
+    unit: 'views/day',
+  },
+});
+return ok({ source: 'Example API', /* metrics… */ chart_ref: chartRef, chart_hint: chartHint(chartRef, uiLang()) });
+```
+
+Claude then calls `mcp__panels__show_chart({ chart_ref })`. Chart files live in the app's data folder and are pruned after a few days.
+The panel tool validates every file, so a broken chart is reported as an error instead of crashing the report.
 
 ## Principles
 

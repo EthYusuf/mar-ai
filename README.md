@@ -32,14 +32,14 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-C9F45B?style=flat-square&labelColor=0A0C10"></a>
   <br>
   <img alt="Powered by Claude" src="https://img.shields.io/badge/powered%20by-Claude-ECEEF2?style=flat-square&labelColor=0A0C10">
-  <img alt="6 MCP servers" src="https://img.shields.io/badge/MCP-6%20built--in%20servers-ECEEF2?style=flat-square&labelColor=0A0C10">
+  <img alt="7 MCP servers" src="https://img.shields.io/badge/MCP-7%20built--in%20servers-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="No API key" src="https://img.shields.io/badge/API%20key-not%20needed-199E70?style=flat-square&labelColor=0A0C10">
   <a href="https://github.com/EthYusuf/mar-ai/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/EthYusuf/mar-ai/ci.yml?branch=main&style=flat-square&labelColor=0A0C10&label=CI"></a>
 </p>
 
-<img src="docs/media/ad-research.gif" alt="mar-ai running a live ad research: tools fire one by one and the report fills with KPI cards, charts, ad cards and insights" width="100%">
+<img src="docs/media/potential-forecast.gif" alt="mar-ai answering “matcha or kombucha?”: tools run, then the report fills with potential scores, a line chart with a dashed 30-day forecast and an 80% range, seasonality charts and a recommendation" width="100%">
 
-<sub><i>A real, unedited run (sped up): “Analyze espresso machine ads running in the US” → Meta Ad Library → live report with KPIs, a format chart, ad cards and insights.</i></sub>
+<sub><i>A real, unedited run (sped up): “Which has more potential for a new drink brand, matcha or kombucha? Show a 30-day forecast and the best month to launch.” → Wikipedia interest → potential scores, a 30-day forecast with its 80% range, seasonality and a recommendation.</i></sub>
 
 </div>
 
@@ -53,8 +53,8 @@ Most AI assistants answer marketing questions with paragraphs. Marketers need **
 <tr>
 <td width="50%" valign="top">
 
-**📊 Reports, not chat bubbles**<br>
-KPI cards, bar/column/line charts with hover tooltips, ad and post cards with real creatives, scene-by-scene storyboards, tables and insights. One click exports the report to PDF.
+**📊 Charts, not chat bubbles**<br>
+Line charts with a **30-day forecast** and its 80% range, KPI cards with potential scores, ad and post cards with real creatives, scene-by-scene storyboards, tables and insights. Every chart has a table view; one click exports the report to PDF.
 
 </td>
 <td width="50%" valign="top">
@@ -68,7 +68,7 @@ The Claude Code engine ships inside the app and runs on <i>your own</i> Claude s
 <td valign="top">
 
 **🌐 Real data, never a login**<br>
-Six built-in MCP servers read <i>free, public, no-login</i> sources: Meta Ad Library, public Instagram pages, YouTube RSS, Google Trends &amp; News, Wikimedia and any website through a headless browser.
+Seven built-in MCP servers read <i>free, public, no-login</i> sources: Meta Ad Library, public Instagram pages, YouTube RSS, Google Trends &amp; News, Wikimedia, Our World in Data and any website through a headless browser.
 
 </td>
 <td valign="top">
@@ -84,7 +84,7 @@ Every data source is a small MCP server in <code>mcps/</code>. Drop in a folder,
 <summary><b>Table of contents</b></summary>
 
 - [Features](#-features)
-  - [Ad Research](#-ad-research) · [Reels Studio](#-reels-studio) · [Competitor Analysis](#-competitor-analysis) · [Trend Radar](#-trend-radar)
+  - [Potential & Forecast](#-potential--forecast) · [Ad Research](#-ad-research) · [Reels Studio](#-reels-studio) · [Competitor Analysis](#-competitor-analysis) · [Trend Radar](#-trend-radar)
   - [Make it yours](#-make-it-yours) · [Computer use](#%EF%B8%8F-computer-use--any-chromium-browser)
 - [Built-in data sources (MCP)](#-built-in-data-sources-mcp)
 - [How it works](#-how-it-works)
@@ -101,14 +101,49 @@ Every data source is a small MCP server in <code>mcps/</code>. Drop in a folder,
 
 ## 🚀 Features
 
+### 🔮 Potential & Forecast
+
+Ask *“is this growing?”*, *“when should we launch?”* or *“which market is bigger?”* and get the answer as a line chart with a forecast, not a paragraph.
+
+| Tool | What you get |
+|---|---|
+| `trend_potential` | Daily interest for up to 4 topics, brands or products, a **30-day forecast with an 80% range**, momentum, phase (*rising · peaking · cooling · steady · emerging*) and a **0-100 potential score** |
+| `seasonality` | The typical year month by month, peak and low months, seasonality strength and the **best launch window** |
+| `market_potential` | Online audience, internet share, population, GDP per capita or mobile subscriptions by country, **projected to 2030** |
+
+<img src="docs/media/potential.png" alt="Potential & Forecast: matcha vs kombucha interest with a dashed 30-day forecast, an 80% range and end labels" width="100%">
+
+<details>
+<summary><b>How the forecast and the score work</b></summary>
+<br>
+
+- **Data.** Interest comes from Wikipedia pageviews (official Wikimedia API, bots excluded): a free, daily, multi-year signal of public attention. It is a proxy for search interest, not Google search volume. Market data comes from Our World in Data (ITU internet use, UN World Population Prospects 2024, World Bank).
+- **Forecast.** A damped-trend Holt-Winters model with weekly seasonality on a log scale, tuned per topic. The 80% range comes from 400 simulated futures that resample the model's own past errors.
+- **Potential score (0-100).** Expected change 40%, momentum 28%, long-term trend 20%, stability 12%. Above 60 is strong, 40-60 neutral, below 40 weak. The breakdown is returned with every score.
+- **Market projection.** The recent rate at which the offline share shrinks is carried forward (so it approaches saturation naturally) and multiplied by the UN medium-variant population projection.
+- **Charts are data-exact.** Tools save chart data and return a `chart_ref`; the report draws it directly, so the model never retypes a number.
+</details>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/media/seasonality.png" alt="Seasonal profile: typical year, last 12 months and the range across years with the peak month marked" width="100%"><br><sub>Seasonality and the best launch window</sub></td>
+<td width="50%" valign="top"><img src="docs/media/market-potential.png" alt="Online population of Türkiye, Germany and Saudi Arabia 2010-2030 with a dashed projection" width="100%"><br><sub>Online audience by country, projected to 2030</sub></td>
+</tr>
+</table>
+
 ### 🔍 Ad Research
 
 Search the **Meta Ad Library** (Facebook + Instagram ads) by keyword or brand, for any country and platform. mar-ai reads the ads like a visitor would and turns them into a report:
 
 - **Format split** (video / image / carousel), most-used **CTAs**, landing domains and top advertisers
 - **Days running** for every ad: long-running ads are usually the profitable ones, so mar-ai surfaces the “winners”
+- **New ads per week** as a line chart and a run-time distribution, so you see when competitors push campaigns
 - **Ad cards** with the real creative, hook, copy, CTA and a short *why it works* analysis
 - **Pixel detection** on competitor sites (Meta Pixel, TikTok Pixel, Google Ads, GA4…) shows which channels they pay for
+
+<img src="docs/media/ad-research.gif" alt="mar-ai running a live ad research: tools fire one by one and the report fills with KPI cards, charts, ad cards and insights" width="100%">
+
+<sub><i>A real run (sped up): “Analyze espresso machine ads running in the US” → Meta Ad Library → KPIs, a format chart, ad cards and insights.</i></sub>
 
 <details>
 <summary><b>See a complete report</b> (KPIs → chart → ad cards → insights)</summary>
@@ -128,13 +163,13 @@ Put brands side by side across channels:
 
 | Channel | What mar-ai measures |
 |---|---|
-| **Instagram** (public profiles) | followers, average likes &amp; comments, **engagement rate**, Reels share, posting frequency, top hashtags, best post |
-| **YouTube** | average &amp; median views, uploads per week, **Shorts share** and Shorts vs long-form performance, best weekday, top videos |
+| **Instagram** (public profiles) | followers, average likes &amp; comments, **engagement rate**, Reels share, posting frequency, top hashtags, best post, engagement per post over time |
+| **YouTube** | views per video over time, **expected views for the next upload**, like rate, momentum, uploads per week, **Shorts share** and Shorts vs long-form performance, best weekday, top videos |
 | **Website** | marketing &amp; SEO health score, Open Graph / social cards, structured data, page weight, **ad &amp; analytics pixels** |
 
 ### 📈 Trend Radar
 
-Catch what people are searching for **right now** (Google Trends daily feed for any country), monitor news about a brand or topic (Google News, with per-day volume and top sources), and compare **interest over time** for up to five topics using Wikimedia pageviews.
+Catch what people are searching for **right now** (Google Trends daily feed for any country, charted by search volume), monitor news about a brand or topic (Google News, with a daily news-volume chart and top sources), then check which topics have real **potential** with a 30-day forecast before you build content around them.
 
 <img src="docs/media/trend-radar.png" alt="Trend Radar report: KPI cards and a search-volume chart of rising US searches" width="100%">
 
@@ -169,18 +204,19 @@ mar-ai uses the browser you already have: **Chrome → Edge → Brave → Vivald
 
 ## 🧰 Built-in data sources (MCP)
 
-All six are free, require **no API key and no login**, and are rate-limited and cached to stay polite.
+All seven are free, require **no API key and no login**, and are rate-limited and cached to stay polite.
 
 | MCP | Tools | Source |
 |---|---|---|
+| `potential` · Potential &amp; Forecast | `trend_potential` · `seasonality` · `market_potential` | Wikimedia Pageviews API, Our World in Data (ITU, UN WPP, World Bank) |
 | `adlibrary` · Ad Library (Meta) | `meta_ads_search` · `meta_ads_screenshot` | Meta Ad Library public pages |
 | `instagram` · Instagram (public) | `instagram_profile` · `instagram_post` · `instagram_compare` | Public profile &amp; post pages, read as a logged-out visitor |
 | `youtube` · YouTube Analytics | `youtube_channel` · `youtube_video` · `youtube_compare` | YouTube RSS feeds, oEmbed, public page metadata |
-| `trends` · Trends &amp; News | `trending_now` · `news_search` · `interest_over_time` | Google Trends RSS, Google News RSS, Wikimedia Pageviews API |
+| `trends` · Trends &amp; News | `trending_now` · `news_search` | Google Trends RSS, Google News RSS |
 | `web` · Web Research | `web_read` · `web_screenshot` · `site_audit` | Any public web page via a headless browser |
 | `browser` · Browser Control | `browser_open` · `browser_click` · `browser_type` · `browser_scroll` · `browser_screenshot` · … | Computer use in a real browser |
 
-On top of these, Claude can use its built-in **WebSearch** and **WebFetch**, and an in-app **panels** server (`report_start`, `show_kpis`, `show_chart`, `show_cards`, `show_storyboard`, `show_insights`, `show_table`, `show_text`) that draws the report.
+On top of these, Claude can use its built-in **WebSearch** and **WebFetch**, and an in-app **panels** server (`report_start`, `show_kpis`, `show_chart`, `show_cards`, `show_storyboard`, `show_insights`, `show_table`, `show_text`) that draws the report. Tools that produce time series return a `chart_ref`, and `show_chart({ chart_ref })` draws that data exactly.
 
 <img src="docs/media/settings-tools.png" alt="Settings: the list of MCP servers with sources and on/off switches" width="100%">
 
@@ -192,16 +228,17 @@ flowchart LR
     UI <-- IPC --> MAIN["Electron main process"]
     MAIN -- "Claude Agent SDK" --> CC["Claude Code engine<br/>(bundled)"]
     CC -- "your own Claude session" --> CLAUDE[("Claude")]
-    CC <-- "stdio" --> MCPS["MCP servers<br/>adlibrary · instagram · youtube<br/>trends · web · browser"]
+    CC <-- "stdio" --> MCPS["MCP servers<br/>potential · adlibrary · instagram<br/>youtube · trends · web · browser"]
     CC <-- "in-process" --> PANELS["panels MCP"]
+    MCPS -. "chart_ref (chart data on disk)" .-> PANELS
     PANELS -- "live report updates" --> UI
     MCPS -- "headless" --> BR["Chrome · Edge · Brave<br/>Vivaldi · Opera"]
-    MCPS -- "public feeds" --> NET[("Ad Library · Instagram<br/>YouTube · Google · Wikimedia")]
+    MCPS -- "public feeds" --> NET[("Ad Library · Instagram · YouTube<br/>Google · Wikimedia · Our World in Data")]
 ```
 
 1. You type a request in one of the four modules. The module adds context so Claude knows which workflow you are in.
 2. The bundled **Claude Code engine** (via the Claude Agent SDK) plans the work and calls the **MCP servers** that fetch real data.
-3. Instead of dumping everything into the chat, Claude calls the **panel tools**. The app renders them instantly as KPI cards, charts, ad cards and storyboards.
+3. Instead of dumping everything into the chat, Claude calls the **panel tools**. The app renders them instantly as KPI cards, charts, ad cards and storyboards. Time-series charts arrive as a `chart_ref`, so the plotted numbers are exactly what the tool returned.
 4. **Skills** (`plugin/skills/*`) teach Claude each workflow: which tools to call, how to analyse and which panels to draw.
 5. The chat stays short: what was done, the key findings and a pointer to the report.
 
@@ -236,6 +273,8 @@ The download link always serves the newest version. Once installed, mar-ai downl
 | Reels Studio | *Plan a 30-second Reel for our new cold brew: 3 scored hooks, storyboard, caption and hashtags.* |
 | Competitor Analysis | *Compare @nike and @adidas on Instagram and YouTube. Who gets more engagement per post?* |
 | Trend Radar | *What is rising in Google searches in Germany today? Suggest three content angles for a coffee brand.* |
+| Potential &amp; Forecast | *Which has more potential for a new drink brand, matcha or kombucha? Show a 30-day forecast and the best month to launch.* |
+| Market potential | *Compare the online audience of Türkiye, Germany and Saudi Arabia and project it to 2030.* |
 
 ## 🛠️ Build from source
 
@@ -261,7 +300,7 @@ electron/        main process: Claude engine, MCP registry, panel tools, auto-up
 src/             React UI: onboarding, chat, report panels, charts, settings
 shared/          types shared by main and UI, browser detection
 mcps/            MCP servers (each: mcp.json + src/index.ts) and shared helpers in mcps/_shared
-plugin/skills/   Claude skills: ad research, Reels planning, competitor analysis, trend radar
+plugin/skills/   Claude skills: ad research, Reels planning, competitor analysis, trend radar, potential analysis
 scripts/         build, dev, start and MCP test scripts
 docs/            guides and README media
 ```
@@ -274,10 +313,13 @@ docs/            guides and README media
 
 **Teach a workflow.** Add `plugin/skills/<name>/SKILL.md` with a clear `description`; Claude loads it when relevant.
 
+**Draw a chart from your tool.** Save the series with `saveChart()` from `mcps/_shared/charts.ts` and return the `chart_ref`; forecasting and statistics helpers live in `mcps/_shared/analytics.ts`.
+
 **Ship it.** Bump the version and push a tag. GitHub Actions builds the installer and publishes the release, and every installed copy updates itself:
 
 ```bash
-git tag v0.2.0 && git push --tags
+npm version 0.3.0 --no-git-tag-version
+git commit -am "chore(release): v0.3.0" && git tag v0.3.0 && git push && git push --tags
 ```
 
 Users can also drop their own MCP folders into `%APPDATA%\mar-ai\mcps` (*Settings → Tools → Open my MCP folder*).
@@ -297,6 +339,7 @@ Users can also drop their own MCP folders into `%APPDATA%\mar-ai\mcps` (*Setting
 - [x] Four modules with live report panels and PDF export
 - [x] Six no-login MCP servers, computer use, any Chromium browser
 - [x] Auto-update via GitHub Releases
+- [x] Potential &amp; Forecast MCP, forecast-ready line charts and data-exact `chart_ref` hand-off (v0.2.0)
 - [ ] Signed Windows installer (no SmartScreen warning)
 - [ ] macOS and Linux builds
 - [ ] More sources: TikTok Creative Center, Google Ads Transparency Center, LinkedIn Ad Library
@@ -352,7 +395,7 @@ If mar-ai helps your marketing work, **give it a ⭐**. It helps other marketers
 
 ## 🙏 Acknowledgments
 
-[Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) · [Model Context Protocol](https://modelcontextprotocol.io) · [Electron](https://www.electronjs.org) · [React](https://react.dev) · [Vite](https://vite.dev) · [Puppeteer](https://pptr.dev) · [Inter](https://rsms.me/inter/) and [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) via Fontsource · [Shields.io](https://shields.io)
+[Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) · [Model Context Protocol](https://modelcontextprotocol.io) · [Wikimedia REST API](https://wikimedia.org/api/rest_v1/) · [Our World in Data](https://ourworldindata.org) · [Electron](https://www.electronjs.org) · [React](https://react.dev) · [Vite](https://vite.dev) · [Puppeteer](https://pptr.dev) · [Inter](https://rsms.me/inter/) and [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) via Fontsource · [Shields.io](https://shields.io)
 
 mar-ai is an independent open-source project and is not affiliated with or endorsed by Anthropic, Meta, Google or YouTube. Product names are trademarks of their respective owners.
 

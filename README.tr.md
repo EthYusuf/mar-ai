@@ -32,14 +32,14 @@
   <a href="LICENSE"><img alt="Lisans: MIT" src="https://img.shields.io/badge/lisans-MIT-C9F45B?style=flat-square&labelColor=0A0C10"></a>
   <br>
   <img alt="Powered by Claude" src="https://img.shields.io/badge/powered%20by-Claude-ECEEF2?style=flat-square&labelColor=0A0C10">
-  <img alt="6 MCP sunucusu" src="https://img.shields.io/badge/MCP-6%20yerle%C5%9Fik%20sunucu-ECEEF2?style=flat-square&labelColor=0A0C10">
+  <img alt="7 MCP sunucusu" src="https://img.shields.io/badge/MCP-7%20yerle%C5%9Fik%20sunucu-ECEEF2?style=flat-square&labelColor=0A0C10">
   <img alt="API anahtarı gerekmez" src="https://img.shields.io/badge/API%20anahtar%C4%B1-gerekmez-199E70?style=flat-square&labelColor=0A0C10">
   <a href="https://github.com/EthYusuf/mar-ai/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/EthYusuf/mar-ai/ci.yml?branch=main&style=flat-square&labelColor=0A0C10&label=CI"></a>
 </p>
 
-<img src="docs/media/ad-research.gif" alt="mar-ai canlı reklam araştırması: araçlar sırayla çalışıyor, rapor KPI kartları, grafikler, reklam kartları ve içgörülerle doluyor" width="100%">
+<img src="docs/media/tr-potential-forecast.gif" alt="mar-ai “matcha mı kombucha mı?” sorusunu yanıtlıyor: araçlar çalışıyor, rapor potansiyel skorları, kesikli 30 günlük tahmin ve %80 aralıklı çizgi grafik, haber grafikleri ve bir kararla doluyor" width="100%">
 
-<sub><i>Gerçek, kurgusuz bir çalışma (hızlandırılmış): “ABD'deki espresso makinesi reklamlarını analiz et” → Meta Reklam Kütüphanesi → KPI'lar, format grafiği, reklam kartları ve içgörülerle canlı rapor. Demolar İngilizce arayüzle kaydedildi; uygulama tamamen Türkçe kullanılabilir.</i></sub>
+<sub><i>Gerçek, kurgusuz bir çalışma (hızlandırılmış): “Küresel ilgiye bakarak, yeni bir içecek markası için matcha mı kombucha mı daha fazla potansiyel taşıyor? 30 günlük tahmini ve lansman için en iyi ayı göster.” → Wikipedia ilgisi ve haberler → potansiyel skorları, %80 aralıklı 30 günlük tahmin, sezon profili ve karar.</i></sub>
 
 </div>
 
@@ -53,8 +53,8 @@
 <tr>
 <td width="50%" valign="top">
 
-**📊 Sohbet balonu değil, rapor**<br>
-KPI kartları, üzerine gelince detay gösteren çubuk/sütun/çizgi grafikler, gerçek kreatiflerle reklam ve gönderi kartları, sahne sahne storyboard, tablolar ve içgörüler. Rapor tek tıkla PDF olur.
+**📊 Sohbet balonu değil, grafik**<br>
+**30 günlük tahmin** ve %80 aralığıyla çizgi grafikler, potansiyel skorlu KPI kartları, gerçek kreatiflerle reklam ve gönderi kartları, sahne sahne storyboard, tablolar ve içgörüler. Her grafiğin tablo görünümü var; rapor tek tıkla PDF olur.
 
 </td>
 <td width="50%" valign="top">
@@ -68,7 +68,7 @@ Claude Code motoru uygulamayla birlikte gelir ve <i>senin</i> Claude oturumunla 
 <td valign="top">
 
 **🌐 Gerçek veri, asla giriş yok**<br>
-Altı yerleşik MCP sunucusu <i>ücretsiz, herkese açık, girişsiz</i> kaynakları okur: Meta Reklam Kütüphanesi, herkese açık Instagram sayfaları, YouTube RSS, Google Trends ve Haberler, Wikimedia ve headless tarayıcıyla herhangi bir web sitesi.
+Yedi yerleşik MCP sunucusu <i>ücretsiz, herkese açık, girişsiz</i> kaynakları okur: Meta Reklam Kütüphanesi, herkese açık Instagram sayfaları, YouTube RSS, Google Trends ve Haberler, Wikimedia, Our World in Data ve headless tarayıcıyla herhangi bir web sitesi.
 
 </td>
 <td valign="top">
@@ -84,7 +84,7 @@ Her veri kaynağı <code>mcps/</code> altında küçük bir MCP sunucusudur. Kla
 <summary><b>İçindekiler</b></summary>
 
 - [Özellikler](#-özellikler)
-  - [Reklam Araştırması](#-reklam-araştırması) · [Reels Stüdyosu](#-reels-stüdyosu) · [Rakip Analizi](#-rakip-analizi) · [Trend Radar](#-trend-radar)
+  - [Potansiyel ve Tahmin](#-potansiyel-ve-tahmin) · [Reklam Araştırması](#-reklam-araştırması) · [Reels Stüdyosu](#-reels-stüdyosu) · [Rakip Analizi](#-rakip-analizi) · [Trend Radar](#-trend-radar)
   - [Kendine göre ayarla](#-kendine-göre-ayarla) · [Computer use](#%EF%B8%8F-computer-use-ve-her-chromium-tarayıcı)
 - [Yerleşik veri kaynakları (MCP)](#-yerleşik-veri-kaynakları-mcp)
 - [Nasıl çalışır](#-nasıl-çalışır)
@@ -101,12 +101,43 @@ Her veri kaynağı <code>mcps/</code> altında küçük bir MCP sunucusudur. Kla
 
 ## 🚀 Özellikler
 
+### 🔮 Potansiyel ve Tahmin
+
+*"Bu büyüyor mu?"*, *"ne zaman lansman yapmalıyız?"* ya da *"hangi pazar daha büyük?"* diye sor; cevabı paragraf olarak değil, tahminli bir çizgi grafik olarak al.
+
+| Araç | Ne verir |
+|---|---|
+| `trend_potential` | En fazla 4 konu, marka veya ürün için günlük ilgi, **%80 aralıklı 30 günlük tahmin**, ivme, faz (*yükseliyor · zirvede · soğuyor · durağan · yeni filizleniyor*) ve **0-100 potansiyel skoru** |
+| `seasonality` | Ay ay tipik yıl, zirve ve dip ayları, sezonsallık gücü ve **en iyi lansman penceresi** |
+| `market_potential` | Ülkelere göre çevrim içi kitle, internet kullanım payı, nüfus, kişi başına GSYH veya mobil abonelik; **2030'a kadar projeksiyon** |
+
+<img src="docs/media/tr-potential.png" alt="Potansiyel ve Tahmin: matcha ve kombuchanın ilgisi, kesikli 30 günlük tahmin ve %80 aralık" width="100%">
+
+<details>
+<summary><b>Tahmin ve skor nasıl hesaplanıyor?</b></summary>
+<br>
+
+- **Veri.** İlgi, Wikipedia görüntülenmelerinden gelir (resmi Wikimedia API'si, bot trafiği hariç): ücretsiz, günlük ve çok yıllık bir kamu ilgisi göstergesidir. Arama ilgisinin bir göstergesidir, Google arama hacmi değildir. Pazar verisi Our World in Data'dan gelir (ITU internet kullanımı, BM Dünya Nüfus Beklentileri 2024, Dünya Bankası).
+- **Tahmin.** Log ölçeğinde, haftalık mevsimselliği olan sönümlü trendli Holt-Winters modeli; parametreler her konu için ayrı ayarlanır. %80 aralık, modelin kendi geçmiş hatalarını yeniden örnekleyen 400 simülasyondan gelir.
+- **Potansiyel skoru (0-100).** Beklenen değişim %40, ivme %28, uzun vadeli eğilim %20, istikrar %12. 60 üstü güçlü, 40-60 nötr, 40 altı zayıf. Her skorla birlikte dökümü de gelir.
+- **Pazar projeksiyonu.** İnternet kullanmayan nüfus payının son yıllardaki azalış hızı sürdürülür (doygunluğa doğal olarak yaklaşır) ve BM orta senaryo nüfus projeksiyonuyla çarpılır.
+- **Grafikler veriyle birebir.** Araçlar grafik verisini kaydedip bir `chart_ref` döndürür; rapor bunu doğrudan çizer, model hiçbir sayıyı yeniden yazmaz.
+</details>
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/media/tr-seasonality.png" alt="Sezon profili: tipik yıl, son 12 ay, yıllar arası aralık ve işaretli zirve ayı" width="100%"><br><sub>Sezonsallık ve en iyi lansman penceresi</sub></td>
+<td width="50%" valign="top"><img src="docs/media/tr-market-potential.png" alt="Türkiye, Almanya ve Suudi Arabistan'ın 2010-2030 çevrim içi kitlesi ve kesikli projeksiyon" width="100%"><br><sub>Ülkelere göre çevrim içi kitle, 2030 projeksiyonu</sub></td>
+</tr>
+</table>
+
 ### 🔍 Reklam Araştırması
 
 **Meta Reklam Kütüphanesi'nde** (Facebook + Instagram reklamları) anahtar kelime veya markayla, istediğin ülke ve platformda arama yapar. mar-ai reklamları bir ziyaretçi gibi okur ve rapora dönüştürür:
 
 - **Format dağılımı** (video / görsel / carousel), en çok kullanılan **CTA'lar**, hedef alan adları ve en çok reklam veren markalar
 - Her reklamın **kaç gündür yayında** olduğu: uzun yayında kalan reklamlar genelde kârlıdır, mar-ai bu "kazananları" öne çıkarır
+- **Haftalık yeni reklam** çizgisi ve yayın süresi dağılımı: rakiplerin kampanyaya ne zaman yüklendiğini görürsün
 - Gerçek kreatif, kanca, metin, CTA ve kısa bir *neden işe yarıyor* analiziyle **reklam kartları**
 - Rakip sitelerinde **piksel tespiti** (Meta Pixel, TikTok Pixel, Google Ads, GA4…): hangi kanallara para harcadıklarını gösterir
 
@@ -118,9 +149,12 @@ Her veri kaynağı <code>mcps/</code> altında küçük bir MCP sunucusudur. Kla
 </table>
 
 <details>
-<summary><b>Raporun tamamını gör</b> (KPI'lar → grafik → reklam kartları → içgörüler)</summary>
+<summary><b>Canlı çalışmayı ve raporun tamamını gör</b> (KPI'lar → grafik → reklam kartları → içgörüler)</summary>
+<br>
+<img src="docs/media/ad-research.gif" alt="mar-ai canlı reklam araştırması: araçlar sırayla çalışıyor, rapor KPI kartları, grafikler, reklam kartları ve içgörülerle doluyor" width="100%">
 <br>
 <img src="docs/media/report-full.png" alt="Eksiksiz bir mar-ai reklam araştırması raporu" width="100%">
+<br><sub><i>Reklam araştırması demosu İngilizce arayüzle kaydedildi (“ABD'deki espresso makinesi reklamlarını analiz et”); uygulama tamamen Türkçe kullanılabilir.</i></sub>
 </details>
 
 ### 🎬 Reels Stüdyosu
@@ -141,13 +175,13 @@ Markaları kanal kanal yan yana koyar:
 
 | Kanal | mar-ai neyi ölçer |
 |---|---|
-| **Instagram** (herkese açık profiller) | takipçi, ortalama beğeni ve yorum, **etkileşim oranı**, Reels oranı, paylaşım sıklığı, en çok kullanılan hashtagler, en iyi gönderi |
-| **YouTube** | ortalama ve medyan izlenme, haftalık yükleme, **Shorts oranı** ve Shorts / uzun video performansı, en iyi gün, en çok izlenen videolar |
+| **Instagram** (herkese açık profiller) | takipçi, ortalama beğeni ve yorum, **etkileşim oranı**, Reels oranı, paylaşım sıklığı, en çok kullanılan hashtagler, en iyi gönderi, zaman içinde gönderi başına etkileşim |
+| **YouTube** | zaman içinde video başına izlenme, **bir sonraki video için beklenen izlenme**, beğeni oranı, ivme, haftalık yükleme, **Shorts oranı** ve Shorts / uzun video performansı, en iyi gün, en çok izlenen videolar |
 | **Web sitesi** | pazarlama ve SEO sağlık puanı, Open Graph / sosyal kartlar, yapılandırılmış veri, sayfa ağırlığı, **reklam ve analitik pikselleri** |
 
 ### 📈 Trend Radar
 
-İnsanların **şu an** ne aradığını yakala (her ülke için Google Trends günlük beslemesi), bir marka veya konuyla ilgili haberleri izle (Google News, günlük haber hacmi ve en çok yazan kaynaklarla) ve en fazla beş konunun **zaman içindeki ilgisini** Wikimedia görüntülenmeleriyle karşılaştır.
+İnsanların **şu an** ne aradığını yakala (her ülke için Google Trends günlük beslemesi, arama hacmi grafiğiyle), bir marka veya konuyla ilgili haberleri izle (Google News, günlük haber yoğunluğu grafiği ve en çok yazan kaynaklarla), sonra içerik üretmeden önce hangi konuların gerçekten **potansiyeli** olduğunu 30 günlük tahminle kontrol et.
 
 <table>
 <tr>
@@ -191,18 +225,19 @@ mar-ai zaten sahip olduğun tarayıcıyı kullanır: **Chrome → Edge → Brave
 
 ## 🧰 Yerleşik veri kaynakları (MCP)
 
-Altısı da ücretsizdir, **API anahtarı ve giriş istemez**; nazik olmak için istekler aralıklandırılır ve önbelleğe alınır.
+Yedisi de ücretsizdir, **API anahtarı ve giriş istemez**; nazik olmak için istekler aralıklandırılır ve önbelleğe alınır.
 
 | MCP | Araçlar | Kaynak |
 |---|---|---|
+| `potential` · Potansiyel ve Tahmin | `trend_potential` · `seasonality` · `market_potential` | Wikimedia Pageviews API, Our World in Data (ITU, BM WPP, Dünya Bankası) |
 | `adlibrary` · Reklam Kütüphanesi (Meta) | `meta_ads_search` · `meta_ads_screenshot` | Meta Ad Library herkese açık sayfaları |
 | `instagram` · Instagram (herkese açık) | `instagram_profile` · `instagram_post` · `instagram_compare` | Herkese açık profil ve gönderi sayfaları (ziyaretçi görünümü) |
 | `youtube` · YouTube Analizi | `youtube_channel` · `youtube_video` · `youtube_compare` | YouTube RSS, oEmbed, herkese açık sayfa meta verileri |
-| `trends` · Trendler ve Haberler | `trending_now` · `news_search` · `interest_over_time` | Google Trends RSS, Google News RSS, Wikimedia Pageviews API |
+| `trends` · Trendler ve Haberler | `trending_now` · `news_search` | Google Trends RSS, Google News RSS |
 | `web` · Web Araştırma | `web_read` · `web_screenshot` · `site_audit` | Headless tarayıcıyla herkese açık web sayfaları |
 | `browser` · Tarayıcı Kontrolü | `browser_open` · `browser_click` · `browser_type` · `browser_scroll` · `browser_screenshot` · … | Gerçek tarayıcıda computer use |
 
-Bunlara ek olarak Claude yerleşik **WebSearch** ve **WebFetch** araçlarını ve raporu çizen uygulama içi **panels** sunucusunu (`report_start`, `show_kpis`, `show_chart`, `show_cards`, `show_storyboard`, `show_insights`, `show_table`, `show_text`) kullanır.
+Bunlara ek olarak Claude yerleşik **WebSearch** ve **WebFetch** araçlarını ve raporu çizen uygulama içi **panels** sunucusunu (`report_start`, `show_kpis`, `show_chart`, `show_cards`, `show_storyboard`, `show_insights`, `show_table`, `show_text`) kullanır. Zaman serisi üreten araçlar bir `chart_ref` döndürür; `show_chart({ chart_ref })` bu veriyi birebir çizer.
 
 <img src="docs/media/settings-tools.png" alt="Ayarlar: kaynakları ve açma/kapama anahtarlarıyla MCP sunucuları listesi" width="100%">
 
@@ -214,16 +249,17 @@ flowchart LR
     UI <-- IPC --> MAIN["Electron ana süreci"]
     MAIN -- "Claude Agent SDK" --> CC["Claude Code motoru<br/>(uygulamayla gelir)"]
     CC -- "senin Claude oturumun" --> CLAUDE[("Claude")]
-    CC <-- "stdio" --> MCPS["MCP sunucuları<br/>adlibrary · instagram · youtube<br/>trends · web · browser"]
+    CC <-- "stdio" --> MCPS["MCP sunucuları<br/>potential · adlibrary · instagram<br/>youtube · trends · web · browser"]
     CC <-- "uygulama içi" --> PANELS["panels MCP"]
+    MCPS -. "chart_ref (diskteki grafik verisi)" .-> PANELS
     PANELS -- "canlı rapor güncellemesi" --> UI
     MCPS -- "headless" --> BR["Chrome · Edge · Brave<br/>Vivaldi · Opera"]
-    MCPS -- "herkese açık kaynaklar" --> NET[("Reklam Kütüphanesi · Instagram<br/>YouTube · Google · Wikimedia")]
+    MCPS -- "herkese açık kaynaklar" --> NET[("Reklam Kütüphanesi · Instagram · YouTube<br/>Google · Wikimedia · Our World in Data")]
 ```
 
 1. Dört modülden birinde isteğini yazarsın; modül, Claude'a hangi iş akışında olduğunu bildiren bağlam ekler.
 2. Uygulamayla gelen **Claude Code motoru** (Claude Agent SDK üzerinden) işi planlar ve gerçek veriyi getiren **MCP sunucularını** çağırır.
-3. Her şeyi sohbete dökmek yerine **panel araçlarını** çağırır; uygulama bunları anında KPI kartı, grafik, reklam kartı ve storyboard olarak çizer.
+3. Her şeyi sohbete dökmek yerine **panel araçlarını** çağırır; uygulama bunları anında KPI kartı, grafik, reklam kartı ve storyboard olarak çizer. Zaman serisi grafikleri `chart_ref` ile gelir; çizilen sayılar aracın döndürdüğüyle birebir aynıdır.
 4. **Skill'ler** (`plugin/skills/*`) Claude'a her iş akışını öğretir: hangi araçları çağıracağını, nasıl analiz edeceğini, hangi panelleri çizeceğini.
 5. Sohbet kısa kalır: ne yapıldı, en önemli bulgular ve rapora yönlendirme.
 
@@ -258,6 +294,8 @@ flowchart LR
 | Reels Stüdyosu | *Yeni soğuk kahvemiz için 30 saniyelik bir Reels planla: puanlı 3 kanca, storyboard, açıklama metni ve hashtagler.* |
 | Rakip Analizi | *@starbucks_tr ve @kahvedunyasi hesaplarını Instagram ve YouTube'da karşılaştır. Gönderi başına kim daha çok etkileşim alıyor?* |
 | Trend Radar | *Türkiye'de bugün yükselen aramalardan bir kahve markası için üç içerik fikri çıkar.* |
+| Potansiyel ve Tahmin | *Yeni bir içecek markası için matcha mı kombucha mı daha fazla potansiyel taşıyor? 30 günlük tahmini ve lansman için en iyi ayı göster.* |
+| Pazar potansiyeli | *Türkiye, Almanya ve Suudi Arabistan'ın çevrim içi kitlesini karşılaştır ve 2030'a kadar projeksiyonunu çıkar.* |
 
 ## 🛠️ Kaynaktan derleme
 
@@ -283,7 +321,7 @@ electron/        ana süreç: Claude motoru, MCP kayıt defteri, panel araçlar�
 src/             React arayüzü: ilk açılış, sohbet, rapor panelleri, grafikler, ayarlar
 shared/          ana süreç ve arayüz ortak türleri, tarayıcı tespiti
 mcps/            MCP sunucuları (her biri: mcp.json + src/index.ts) ve ortak yardımcılar (mcps/_shared)
-plugin/skills/   Claude skill'leri: reklam araştırması, Reels planlama, rakip analizi, trend radarı
+plugin/skills/   Claude skill'leri: reklam araştırması, Reels planlama, rakip analizi, trend radarı, potansiyel analizi
 scripts/         derleme, geliştirme, başlatma ve MCP test betikleri
 docs/            rehberler ve README görselleri
 ```
@@ -296,10 +334,13 @@ docs/            rehberler ve README görselleri
 
 **İş akışı öğret.** Açık bir `description` ile `plugin/skills/<ad>/SKILL.md` ekle; Claude gerektiğinde yükler.
 
+**Aracından grafik çiz.** Seriyi `mcps/_shared/charts.ts` içindeki `saveChart()` ile kaydet ve `chart_ref` döndür; tahmin ve istatistik yardımcıları `mcps/_shared/analytics.ts` içinde.
+
 **Yayınla.** Sürümü artır ve etiketi gönder. GitHub Actions kurulum dosyasını derleyip yayınlar, kurulu tüm kopyalar kendini günceller:
 
 ```bash
-git tag v0.2.0 && git push --tags
+npm version 0.3.0 --no-git-tag-version
+git commit -am "chore(release): v0.3.0" && git tag v0.3.0 && git push && git push --tags
 ```
 
 Kullanıcılar kendi MCP klasörlerini `%APPDATA%\mar-ai\mcps` içine de koyabilir (*Ayarlar → Araçlar → Kendi MCP klasörünü aç*).
@@ -319,6 +360,7 @@ Kullanıcılar kendi MCP klasörlerini `%APPDATA%\mar-ai\mcps` içine de koyabil
 - [x] Canlı rapor panelleri ve PDF çıktısıyla dört modül
 - [x] Girişsiz altı MCP sunucusu, computer use, her Chromium tarayıcı
 - [x] GitHub Releases ile otomatik güncelleme
+- [x] Potansiyel ve Tahmin MCP'si, tahminli çizgi grafikler ve veriyle birebir `chart_ref` aktarımı (v0.2.0)
 - [ ] İmzalı Windows kurulum dosyası (SmartScreen uyarısız)
 - [ ] macOS ve Linux sürümleri
 - [ ] Yeni kaynaklar: TikTok Creative Center, Google Ads Transparency Center, LinkedIn Ad Library
@@ -374,7 +416,7 @@ mar-ai pazarlama işine yarıyorsa **bir ⭐ bırak**; başka pazarlamacıların
 
 ## 🙏 Teşekkürler
 
-[Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) · [Model Context Protocol](https://modelcontextprotocol.io) · [Electron](https://www.electronjs.org) · [React](https://react.dev) · [Vite](https://vite.dev) · [Puppeteer](https://pptr.dev) · Fontsource üzerinden [Inter](https://rsms.me/inter/) ve [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) · [Shields.io](https://shields.io)
+[Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) · [Model Context Protocol](https://modelcontextprotocol.io) · [Wikimedia REST API](https://wikimedia.org/api/rest_v1/) · [Our World in Data](https://ourworldindata.org) · [Electron](https://www.electronjs.org) · [React](https://react.dev) · [Vite](https://vite.dev) · [Puppeteer](https://pptr.dev) · Fontsource üzerinden [Inter](https://rsms.me/inter/) ve [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk) · [Shields.io](https://shields.io)
 
 mar-ai bağımsız bir açık kaynak projesidir; Anthropic, Meta, Google veya YouTube ile bağlantılı değildir ve onlar tarafından onaylanmamıştır. Ürün adları sahiplerinin ticari markalarıdır.
 

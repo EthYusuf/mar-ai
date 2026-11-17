@@ -82,6 +82,38 @@ await startServer(server, 'mar-ornek');
 | `ChromeSession` (`chrome.ts`) | Kurulu Chrome/Edge'i ayrı bir profille arka planda açar, boşta kalınca kapatır. |
 | `blocks` / `tag` / `attr` (`xml.ts`) | RSS/Atom ayrıştırma. |
 | `parseCompactNumber`, `median`, `topCounts`, `hashtags` | Sayı ve metin yardımcıları. |
+| `saveChart` / `chartHint` (`charts.ts`) | Grafik verisini kaydeder, raporun birebir çizdiği bir `chart_ref` döndürür (aşağıya bak). |
+| `forecastSeries`, `smoothedForecast`, `forecastTotal` (`analytics.ts`) | Simüle edilmiş %80 aralıklı, sönümlü trendli Holt-Winters tahmini. |
+| `rollingMean`, `rollingMedian`, `pctChange`, `coefVar`, `linearFit`, `weekStartIso` (`analytics.ts`) | Zaman serisi istatistikleri ve tarih yardımcıları. |
+| `resolveArticle`, `dailyViews`, `monthlyViews` (`wiki.ts`) | Wikipedia makale bulma ve Wikimedia görüntülenmeleri. |
+
+## Grafik döndürmek (`chart_ref`)
+
+Claude'a yüzlerce sayıyı `show_chart`'a kopyalatma. Seriyi kaydet ve kimliğini döndür: rapor aracının ürettiği veriyi
+birebir çizer, model yalnızca grafiğin yerine karar verir.
+
+```ts
+import { saveChart, chartHint } from '../../_shared/charts';
+
+const chartRef = saveChart({
+  title: 'Örnek · günlük ilgi ve 30 günlük tahmin',
+  subtitle: '7 günlük ortalama · kesikli çizgi tahmin',
+  sources: ['Örnek API'],
+  spec: {
+    chartType: 'line',            // 'line' | 'area' | 'bar' | 'column'
+    xType: 'time',                // categories ISO tarih: YYYY-MM-DD, YYYY-MM veya YYYY
+    categories: tarihler,         // geçmiş + tahmin tarihleri
+    series: [{ name: 'Örnek', values, low, high }], // null = değer yok; low/high = bant
+    forecastStart: gecmis.length, // bu sıradan itibaren kesikli çizgi + tahmin bölgesi
+    markers: [{ index: zirveSirasi, label: 'Zirve' }],
+    unit: 'görüntülenme/gün',
+  },
+});
+return ok({ source: 'Örnek API', /* metrikler… */ chart_ref: chartRef, chart_hint: chartHint(chartRef, uiLang()) });
+```
+
+Claude ardından `mcp__panels__show_chart({ chart_ref })` çağırır. Grafik dosyaları uygulamanın veri klasöründe durur ve birkaç
+gün sonra temizlenir. Panel aracı her dosyayı doğrular; bozuk bir grafik raporu çökertmez, hata olarak bildirilir.
 
 ## İlkeler
 

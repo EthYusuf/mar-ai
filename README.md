@@ -13,7 +13,12 @@
 **Ad research, Reels planning, competitor analysis and trend tracking —<br>delivered as live, interactive reports instead of walls of chat text.**
 
 <p>
-  <a href="https://github.com/EthYusuf/mar-ai/releases/latest"><b>Download for Windows</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/EthYusuf/mar-ai/releases/latest/download/mar-ai-Setup.exe"><img alt="Download mar-ai for Windows" src="docs/media/download-windows.png" width="324"></a>
+  <br>
+  <sub>Windows 10 / 11 · always the latest version · <a href="https://github.com/EthYusuf/mar-ai/releases">all releases</a></sub>
+</p>
+
+<p>
   <a href="#-quick-start"><b>Quick start</b></a> &nbsp;·&nbsp;
   <a href="#-how-it-works">How it works</a> &nbsp;·&nbsp;
   <a href="docs/MCP-DEVELOPMENT.md">Build your own MCP</a> &nbsp;·&nbsp;
@@ -206,8 +211,10 @@ flowchart LR
 
 | Platform | Download | Notes |
 |---|---|---|
-| **Windows 10 / 11** (x64) | [`mar-ai-Setup-x.y.z.exe`](https://github.com/EthYusuf/mar-ai/releases/latest) | Unsigned for now: SmartScreen → **More info → Run anyway** |
+| **Windows 10 / 11** (x64) | **[⬇ mar-ai-Setup.exe](https://github.com/EthYusuf/mar-ai/releases/latest/download/mar-ai-Setup.exe)** | Unsigned for now: SmartScreen → **More info → Run anyway** |
 | macOS · Linux | Build from source | Packaged builds are on the [roadmap](#%EF%B8%8F-roadmap) |
+
+The download link always serves the newest version. Once installed, mar-ai downloads updates in the background and installs them when you close it. Older versions are on the [releases page](https://github.com/EthYusuf/mar-ai/releases).
 
 **Requirements**
 

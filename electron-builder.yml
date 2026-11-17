@@ -45,7 +45,9 @@ nsis:
   createDesktopShortcut: always
   createStartMenuShortcut: true
   shortcutName: mar-ai
-  artifactName: mar-ai-Setup-${version}.${ext}
+  # Sürüm numarası dosya adında yok: README'deki releases/latest/download/mar-ai-Setup.exe
+  # bağlantısı her zaman en yeni sürümü indirir. Otomatik güncelleme latest.yml'i okur.
+  artifactName: mar-ai-Setup.${ext}
   uninstallDisplayName: mar-ai
 
 # Yayın hedefi: kurulu uygulamalar güncellemeleri bu deponun Releases sayfasından alır.

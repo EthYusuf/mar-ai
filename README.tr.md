@@ -13,7 +13,12 @@
 **Reklam araştırması, Reels planlama, rakip analizi ve trend takibi —<br>uzun sohbet metinleri yerine canlı, etkileşimli raporlar olarak.**
 
 <p>
-  <a href="https://github.com/EthYusuf/mar-ai/releases/latest"><b>Windows için indir</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/EthYusuf/mar-ai/releases/latest/download/mar-ai-Setup.exe"><img alt="mar-ai'yi Windows için indir" src="docs/media/tr-download-windows.png" width="359"></a>
+  <br>
+  <sub>Windows 10 / 11 · her zaman en son sürüm · <a href="https://github.com/EthYusuf/mar-ai/releases">tüm sürümler</a></sub>
+</p>
+
+<p>
   <a href="#-hızlı-başlangıç"><b>Hızlı başlangıç</b></a> &nbsp;·&nbsp;
   <a href="#-nasıl-çalışır">Nasıl çalışır</a> &nbsp;·&nbsp;
   <a href="docs/MCP-GELISTIRME.md">Kendi MCP'ni yaz</a> &nbsp;·&nbsp;
@@ -228,8 +233,10 @@ flowchart LR
 
 | Platform | İndir | Not |
 |---|---|---|
-| **Windows 10 / 11** (x64) | [`mar-ai-Setup-x.y.z.exe`](https://github.com/EthYusuf/mar-ai/releases/latest) | Şimdilik imzasız: SmartScreen → **Ek bilgi → Yine de çalıştır** |
+| **Windows 10 / 11** (x64) | **[⬇ mar-ai-Setup.exe](https://github.com/EthYusuf/mar-ai/releases/latest/download/mar-ai-Setup.exe)** | Şimdilik imzasız: SmartScreen → **Ek bilgi → Yine de çalıştır** |
 | macOS · Linux | Kaynaktan derle | Paketli sürümler [yol haritasında](#%EF%B8%8F-yol-haritası) |
+
+İndirme bağlantısı her zaman en yeni sürümü verir. Kurulduktan sonra mar-ai güncellemeleri arka planda indirir ve uygulamayı kapattığında kurar. Eski sürümler [sürümler sayfasında](https://github.com/EthYusuf/mar-ai/releases).
 
 **Gereksinimler**
 
